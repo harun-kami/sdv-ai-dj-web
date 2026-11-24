@@ -1,201 +1,201 @@
-﻿Track_ID,Track_Name,Artist_Name,Valence,Energy,BPM,Instrumentalness,Acousticness
-1,Lemon,米津玄師,0.4,0.6,87,0.0,0.3,04TshWXkhV1qkqHzf31Hn6
-2,高嶺の花子さん,back number,0.7,0.85,134,0.0,0.05,2jdbZGFp8KVTuk0YxDNL4l
-3,水平線,back number,0.5,0.55,82,0.0,0.2,5m1i6hq7dmRlp3c1utE48L
-4,ヒロイン,back number,0.45,0.65,85,0.0,0.15,3hBAYbAECEix9raaTq8S3H
-5,Pretender,Official髭男dism,0.45,0.75,92,0.0,0.1,5LkWXxDxUTwEVHL0pfKL55
-6,Subtitle,Official髭男dism,0.4,0.7,95,0.0,0.15,49F3htNmwzPKFycPdOrDvf
-7,ミックスナッツ,Official髭男dism,0.8,0.9,150,0.0,0.05,60ReNXcPcsVFd7nUuQw5HZ
-8,夜に駆ける,YOASOBI,0.75,0.88,130,0.0,0.05,3dPtXHP0oXQ4HCWHsOA9js
-9,アイドル,YOASOBI,0.85,0.95,166,0.0,0.02,7ovUcF5uHTBRzUpB6ZOmvt
-10,群青,YOASOBI,0.65,0.85,135,0.0,0.05,0T4AitQuq8IJhWBWuZwkFA
-11,マリーゴールド,あいみょん,0.65,0.65,106,0.0,0.35,0jWVUKsIoyo3zw64RaEWYg
-12,裸の心,あいみょん,0.5,0.45,74,0.0,0.6,4Jv7U0JJpbQnOrjtDwDZTZ
-13,君はロックを聴かない,あいみょん,0.7,0.75,108,0.0,0.2,01IZAuQsBO00iLKFO9LsFf
-14,白日,King Gnu,0.45,0.7,94,0.0,0.15,5iF0Yf9gju6ERpAch08JsC
-15,呪術廻戦 - 廻廻奇譚,Eve,0.5,0.9,145,0.0,0.05,2gSkvrwfCXCgqeugzezn97
-16,うっせぇわ,Ado,0.3,0.95,150,0.0,0.05,6EzZn96uOc9JsVGNRpx06n
-17,新時代,Ado,0.8,0.9,175,0.0,0.02,2l2yRJWgMiJkfPbRNiuC25
-18,唱,Ado,0.75,0.95,130,0.0,0.01,2tlOVDJ3lQsUxz22vPJ4c4
-19,ドライフラワー,優里,0.4,0.55,74,0.0,0.4,7dH0dpi751EoguDDg3xx6J
-20,ベテルギウス,優里,0.5,0.65,82,0.0,0.3,4JK1kDUdH9RTBQrrSO1QfR
-21,きらり,藤井風,0.8,0.7,116,0.0,0.1
-22,死ぬのがいいわ,藤井風,0.45,0.6,110,0.0,0.35
-23,怪獣の花唄,Vaundy,0.75,0.9,150,0.0,0.05
-24,踊り子,Vaundy,0.6,0.65,114,0.0,0.1
-25,ケセラセラ,Mrs. GREEN APPLE,0.85,0.85,124,0.0,0.05
-26,青と夏,Mrs. GREEN APPLE,0.9,0.9,146,0.0,0.02
-27,点描の唄,Mrs. GREEN APPLE,0.45,0.55,80,0.0,0.5
-28,パプリカ,Foorin,0.85,0.75,100,0.0,0.2
-29,打上花火,DAOKO × 米津玄師,0.55,0.6,98,0.0,0.25
-30,まちがいさがし,菅田将暉,0.4,0.55,80,0.0,0.4
-31,虹,菅田将暉,0.5,0.5,78,0.0,0.55
-32,香水,瑛人,0.6,0.4,105,0.0,0.85
-33,猫,DISH//,0.45,0.55,76,0.0,0.3
-34,紅蓮華,LiSA,0.6,0.95,135,0.0,0.02
-35,炎,LiSA,0.4,0.65,76,0.0,0.15
-36,前前前世,RADWIMPS,0.75,0.92,190,0.0,0.05
-37,なんでもないや,RADWIMPS,0.4,0.45,74,0.0,0.65
-38,スパークル,RADWIMPS,0.45,0.5,118,0.0,0.7
-39,恋,星野源,0.85,0.8,158,0.0,0.1
-40,SUN,星野源,0.8,0.75,114,0.0,0.2
-41,Shape of You,Ed Sheeran,0.85,0.65,96,0.0,0.4
-42,Perfect,Ed Sheeran,0.4,0.4,95,0.0,0.6
-43,Bad Guy,Billie Eilish,0.55,0.45,135,0.02,0.3
-44,Stay,The Kid LAROI & Justin Bieber,0.75,0.75,170,0.0,0.05
-45,Blinding Lights,The Weeknd,0.7,0.8,171,0.0,0.05
-46,Closer,The Chainsmokers,0.65,0.75,95,0.0,0.1
-47,Something Just Like This,The Chainsmokers & Coldplay,0.6,0.75,103,0.0,0.05
-48,Wake Me Up,Avicii,0.65,0.85,124,0.0,0.05
-49,The Nights,Avicii,0.7,0.85,126,0.0,0.05
-50,Faded,Alan Walker,0.3,0.6,90,0.05,0.1
-51,Let It Go,Idina Menzel,0.35,0.65,137,0.0,0.15
-52,Shake It Off,Taylor Swift,0.9,0.8,160,0.0,0.05
-53,Butter,BTS,0.85,0.75,110,0.0,0.05
-54,Dynamite,BTS,0.9,0.8,114,0.0,0.02
-55,TT,TWICE,0.85,0.85,130,0.0,0.05
-56,Feel Special,TWICE,0.75,0.88,129,0.0,0.05
-57,Make you happy,NiziU,0.85,0.85,160,0.0,0.05
-58,恋するフォーチュンクッキー,AKB48,0.9,0.8,122,0.0,0.1
-59,ヘビーローテーション,AKB48,0.85,0.9,158,0.0,0.05
-60,365日の紙飛行機,AKB48,0.7,0.6,104,0.0,0.3
-61,ポリリズム,Perfume,0.75,0.85,128,0.0,0.02
-62,チョコレイト・ディスコ,Perfume,0.85,0.9,128,0.0,0.01
-63,R.Y.U.S.E.I.,三代目 J SOUL BROTHERS,0.7,0.9,128,0.0,0.05
-64,花束代わりにメロディーを,清水翔太,0.45,0.5,76,0.0,0.55
-65,Wherever you are,ONE OK ROCK,0.4,0.65,84,0.0,0.2
-66,完全感覚Dreamer,ONE OK ROCK,0.6,0.95,190,0.0,0.01
-67,Wasted Nights,ONE OK ROCK,0.5,0.85,108,0.0,0.05
-68,キセキ,GReeeeN,0.75,0.85,90,0.0,0.1
-69,愛唄,GReeeeN,0.7,0.8,82,0.0,0.15
-70,遥か,GReeeeN,0.5,0.65,80,0.0,0.2
-71,ひまわりの約束,秦基博,0.45,0.55,80,0.0,0.5
-72,奏(かなで),スキマスイッチ,0.45,0.6,78,0.0,0.3
-73,全力少年,スキマスイッチ,0.85,0.85,134,0.0,0.1
-74,栄光の架橋,ゆず,0.55,0.65,74,0.0,0.35
-75,夏色,ゆず,0.9,0.85,116,0.0,0.4
-76,小さな恋のうた,MONGOL800,0.8,0.95,115,0.0,0.01
-77,天体観測,BUMP OF CHICKEN,0.7,0.9,135,0.0,0.05
-78,カルマ,BUMP OF CHICKEN,0.6,0.92,185,0.0,0.02
-79,リライト,ASIAN KUNG-FU GENERATION,0.5,0.95,173,0.0,0.01
-80,ソラニン,ASIAN KUNG-FU GENERATION,0.55,0.85,134,0.0,0.05
-81,千本桜,黒うさP feat.初音ミク,0.75,0.95,154,0.0,0.02
-82,シャルル,バルーン,0.6,0.9,145,0.0,0.05
-83,メルト,ryo (supercell) feat.初音ミク,0.7,0.85,170,0.0,0.05
-84,アスノヨゾラ哨戒班,Orangestar,0.65,0.92,120,0.0,0.05
-85,ただ君に晴れ,ヨルシカ,0.75,0.85,140,0.0,0.1
-86,春泥棒,ヨルシカ,0.65,0.8,135,0.0,0.15
-87,花に亡霊,ヨルシカ,0.5,0.65,118,0.0,0.3
-88,白日,King Gnu,0.45,0.75,94,0.0,0.15
-89,飛行艇,King Gnu,0.6,0.85,86,0.0,0.05
-90,一途,King Gnu,0.55,0.95,160,0.0,0.05
-91,Habit,SEKAI NO OWARI,0.7,0.85,120,0.0,0.05
-92,RPG,SEKAI NO OWARI,0.75,0.8,126,0.0,0.1
-93,Dragon Night,SEKAI NO OWARI,0.65,0.85,128,0.0,0.05
-94,シュガーソングとビターステップ,UNISON SQUARE GARDEN,0.85,0.9,132,0.0,0.05
-95,オリオンをなぞる,UNISON SQUARE GARDEN,0.8,0.92,135,0.0,0.02
-96,シルエット,KANA-BOON,0.75,0.95,183,0.0,0.01
-97,ないものねだり,KANA-BOON,0.8,0.9,166,0.0,0.02
-98,ファーストラヴ,Uru,0.3,0.45,74,0.0,0.7
-99,プロローグ,Uru,0.35,0.5,76,0.0,0.65
-100,アイノカタチ,MISIA,0.55,0.65,82,0.0,0.2
-101,Everything,MISIA,0.4,0.55,75,0.0,0.3
-102,Mela!,緑黄色社会,0.85,0.88,135,0.0,0.05
-103,花になって,緑黄色社会,0.75,0.92,160,0.0,0.02
-104,CITRUS,Da-iCE,0.5,0.8,85,0.0,0.15
-105,スターマイン,Da-iCE,0.8,0.9,130,0.0,0.05
-106,Stand by me Stand by you.,平井大,0.75,0.65,95,0.0,0.3
-107,Slow & Easy,平井大,0.85,0.6,88,0.0,0.5
-108,W/X/Y,Tani Yuuki,0.65,0.6,90,0.0,0.2
-109,Myra,Tani Yuuki,0.55,0.55,85,0.0,0.3
-110,Overdose,なとり,0.6,0.7,114,0.0,0.15
-111,エジソン,水曜日のカンパネラ,0.7,0.8,130,0.0,0.1
-112,晩餐歌,tuki.,0.45,0.6,80,0.0,0.4
-113,ビリミリオン,優里,0.75,0.85,120,0.0,0.1
-114,シンデレラボーイ,Saucy Dog,0.5,0.7,88,0.0,0.15
-115,いつか,Saucy Dog,0.45,0.65,85,0.0,0.2
-116,勿忘,Awesome City Club,0.6,0.7,105,0.0,0.15
-117,ぎゅっと。,もさを。,0.7,0.5,85,0.0,0.6
-118,魔法の絨毯,川崎鷹也,0.65,0.45,80,0.0,0.75
-119,桜が降る夜は,あいみょん,0.6,0.7,105,0.0,0.25
-120,あの夢をなぞって,YOASOBI,0.75,0.85,135,0.0,0.05
-121,怪物,YOASOBI,0.45,0.9,170,0.0,0.02
-122,第ゼロ感,10-FEET,0.6,0.95,150,0.0,0.01
-123,KICK BACK,米津玄師,0.5,0.95,102,0.0,0.05
-124,Loser,米津玄師,0.55,0.85,115,0.0,0.1
-125,ピースサイン,米津玄師,0.8,0.9,200,0.0,0.05
-126,Soranji,Mrs. GREEN APPLE,0.45,0.65,75,0.0,0.4
-127,ダンスホール,Mrs. GREEN APPLE,0.85,0.9,126,0.0,0.05
-128,インフェルノ,Mrs. GREEN APPLE,0.6,0.95,160,0.0,0.02
-129,WanteD! WanteD!,Mrs. GREEN APPLE,0.75,0.92,130,0.0,0.05
-130,僕のこと,Mrs. GREEN APPLE,0.45,0.7,72,0.0,0.25
-131,115万キロのフィルム,Official髭男dism,0.7,0.75,97,0.0,0.15
-132,I LOVE...,Official髭男dism,0.65,0.8,95,0.0,0.1
-133,宿命,Official髭男dism,0.6,0.85,88,0.0,0.05
-134,Cry Baby,Official髭男dism,0.45,0.9,105,0.0,0.05
-135,Tokyo Drift,Teriyaki Boyz,0.7,0.85,115,0.0,0.05
-136,桜,コブクロ,0.45,0.55,75,0.0,0.35
-137,蕾,コブクロ,0.4,0.5,72,0.0,0.4
-138,粉雪,レミオロメン,0.45,0.75,82,0.0,0.15
-139,3月9日,レミオロメン,0.5,0.6,80,0.0,0.25
-140,Story,AI,0.45,0.55,74,0.0,0.3
-141,ハナミズキ,一青窈,0.4,0.5,70,0.0,0.4
-142,雪の華,中島美嘉,0.35,0.45,72,0.0,0.5
-143,瞳をとじて,平井堅,0.4,0.5,74,0.0,0.45
-144,Pop Virus,星野源,0.75,0.8,95,0.0,0.15
-145,不思議,星野源,0.7,0.7,100,0.0,0.2
-146,Beautiful,Superfly,0.65,0.85,90,0.0,0.1
-147,愛をこめて花束を,Superfly,0.75,0.9,85,0.0,0.05
-148,三日月,絢香,0.4,0.55,75,0.0,0.4
-149,にじいろ,絢香,0.8,0.65,100,0.0,0.3
-150,トリセツ,西野カナ,0.75,0.7,110,0.0,0.15
-151,Darling,西野カナ,0.8,0.65,95,0.0,0.2
-152,会いたくて 会いたくて,西野カナ,0.45,0.7,120,0.0,0.1
-153,Family Song,星野源,0.7,0.7,95,0.0,0.25
-154,Lemonade,Lofi Girl,0.5,0.3,75,0.95,0.7
-155,Midnight Drive,Chillhop Music,0.45,0.4,80,0.9,0.5
-156,Ocean Waves Chill,Lofi Beats,0.6,0.25,70,0.98,0.8
-157,Sunset Cafe,Lofi Jazz,0.55,0.35,85,0.95,0.6
-158,Rainy Day Study,Lofi Girl,0.4,0.2,65,0.99,0.85
-159,Night City Lights,Synthwave,0.65,0.75,110,0.9,0.05
-160,Cyberpunk Run,Dark Synth,0.4,0.85,120,0.95,0.01
-161,Summer Breeze Acoustic,Acoustic Guitar,0.7,0.4,90,0.95,0.9
-162,Morning Piano,Piano Instrumental,0.6,0.3,75,0.95,0.95
-163,Epic Mountain Trail,Orchestral,0.55,0.8,100,0.9,0.1
-164,High Speed Chase,EDM Instrumental,0.65,0.95,150,0.85,0.02
-165,Deep Forest Walk,Ambient,0.5,0.25,60,0.98,0.85
-166,Relaxing Spa,Healing Music,0.6,0.15,65,1.0,0.9
-167,Energetic Workout,Fitness EDM,0.75,0.95,128,0.8,0.05
-168,Nostalgic Evening,Acoustic Cafe,0.55,0.35,80,0.95,0.8
-169,Lo-Fi Highway,Lofi Hip Hop,0.5,0.45,85,0.9,0.4
-170,Neon Tokyo,Future Bass,0.65,0.85,140,0.85,0.05
-171,Aesthetic Sunset,Vaporwave,0.6,0.55,95,0.8,0.15
-172,Calm Ocean,Nature Sounds,0.5,0.1,0,1.0,0.95
-173,Windy Road,Acoustic Folk,0.65,0.45,100,0.9,0.75
-174,Heavy Traffic Angry,Metal Instrumental,0.3,0.95,180,0.85,0.01
-175,Snowy Night Chill,Ambient Piano,0.45,0.2,70,0.95,0.9
-176,Sunny Day Drive,Upbeat Pop Inst,0.85,0.75,120,0.9,0.1
-177,Cloudy Mood,Sad Piano,0.35,0.3,65,0.95,0.9
-178,Racing Pulse,Drum and Bass,0.5,0.98,174,0.9,0.01
-179,Gentle Awakening,Morning Acoustic,0.75,0.35,85,0.95,0.85
-180,Highway Cruising,City Pop Inst,0.7,0.65,110,0.85,0.2
-181,Mountain Top View,Epic Orchestral,0.65,0.85,115,0.9,0.1
-182,Narrow Alley Tension,Dark Ambient,0.4,0.4,90,0.95,0.4
-183,Sleepy Passenger,Lulling Harp,0.5,0.15,60,0.95,0.95
-184,Tired Eyes,Slow Lofi,0.45,0.25,70,0.9,0.7
-185,Rain on Roof,ASMR Beats,0.55,0.2,75,0.98,0.8
-186,Focus Timer 25,Study Lofi,0.6,0.4,80,0.95,0.6
-187,Endless Road,Trance,0.65,0.85,138,0.9,0.05
-188,Joyful Journey,Happy Acoustic,0.85,0.6,110,0.95,0.8
-189,Lonely Highway,Melancholy Synth,0.4,0.55,90,0.9,0.3
-190,Danger Ahead,Tense Cinematic,0.3,0.8,130,0.95,0.1
-191,Happy Accident,Playful Jazz,0.8,0.65,120,0.9,0.7
-192,Smooth Operator,Smooth Jazz,0.7,0.5,95,0.9,0.6
-193,Night Owl,Deep House,0.6,0.75,122,0.85,0.1
-194,Generated Track 1 (Ballad),Various Artists,0.32,0.4,66,0.07,0.7
-195,Generated Track 2 (EDM/Club),Various Artists,0.52,0.8,128,0.52,0.01
-196,Generated Track 3 (Rock/Metal),Various Artists,0.61,0.86,199,0.14,0.02
-197,Generated Track 4 (Acoustic/Folk),Various Artists,0.57,0.32,79,0.23,0.63
-198,Generated Track 5 (Acoustic/Folk),Various Artists,0.8,0.28,90,0.41,0.71
-199,Generated Track 6 (Acoustic/Folk),Various Artists,0.56,0.37,88,0.19,0.64
-200,Generated Track 7 (EDM/Club),Various Artists,0.63,0.93,147,0.77,0.06
+﻿Track_ID,Track_Name,Artist_Name,Valence,Energy,BPM,Instrumentalness,Acousticness,Track_URI
+1,Lemon,米津玄師,0.4,0.6,87,0.0,0.3,04TshWXkhV1qkqHzf31Hn6,spotify:track:04TshWXkhV1qkqHzf31Hn6
+2,高嶺の花子さん,back number,0.7,0.85,134,0.0,0.05,2jdbZGFp8KVTuk0YxDNL4l,spotify:track:2jdbZGFp8KVTuk0YxDNL4l
+3,水平線,back number,0.5,0.55,82,0.0,0.2,5m1i6hq7dmRlp3c1utE48L,spotify:track:3RvdkNMcSy71m0aT6UF9Uf
+4,ヒロイン,back number,0.45,0.65,85,0.0,0.15,3hBAYbAECEix9raaTq8S3H,spotify:track:3hBAYbAECEix9raaTq8S3H
+5,Pretender,Official髭男dism,0.45,0.75,92,0.0,0.1,5LkWXxDxUTwEVHL0pfKL55,spotify:track:58dxGXavrcagRqA58fNB0Z
+6,Subtitle,Official髭男dism,0.4,0.7,95,0.0,0.15,49F3htNmwzPKFycPdOrDvf,spotify:track:5ZkHkXPHrIM8K5twCe78i9
+7,ミックスナッツ,Official髭男dism,0.8,0.9,150,0.0,0.05,60ReNXcPcsVFd7nUuQw5HZ,spotify:track:60ReNXcPcsVFd7nUuQw5HZ
+8,夜に駆ける,YOASOBI,0.75,0.88,130,0.0,0.05,3dPtXHP0oXQ4HCWHsOA9js,spotify:track:6MCjmGYlw6mQVWRFVgBRvB
+9,アイドル,YOASOBI,0.85,0.95,166,0.0,0.02,7ovUcF5uHTBRzUpB6ZOmvt,spotify:track:7ovUcF5uHTBRzUpB6ZOmvt
+10,群青,YOASOBI,0.65,0.85,135,0.0,0.05,0T4AitQuq8IJhWBWuZwkFA,spotify:track:1zd35Y44Blc1CwwVbW3Qnk
+11,マリーゴールド,あいみょん,0.65,0.65,106,0.0,0.35,0jWVUKsIoyo3zw64RaEWYg,spotify:track:2cKiHG16JBiqHdi7Llq0r7
+12,裸の心,あいみょん,0.5,0.45,74,0.0,0.6,4Jv7U0JJpbQnOrjtDwDZTZ,spotify:track:4Jv7U0JJpbQnOrjtDwDZTZ
+13,君はロックを聴かない,あいみょん,0.7,0.75,108,0.0,0.2,01IZAuQsBO00iLKFO9LsFf,spotify:track:59eluCMn0XbOWqeWQ91FTM
+14,白日,King Gnu,0.45,0.7,94,0.0,0.15,5iF0Yf9gju6ERpAch08JsC,spotify:track:172fMG26G2OoEzzg0wn26r
+15,呪術廻戦 - 廻廻奇譚,Eve,0.5,0.9,145,0.0,0.05,2gSkvrwfCXCgqeugzezn97,spotify:track:2oJnbMXsXaFVpJcimaDWGz
+16,うっせぇわ,Ado,0.3,0.95,150,0.0,0.05,6EzZn96uOc9JsVGNRpx06n,spotify:track:5QS01sq07pThdktoNUxXRZ
+17,新時代,Ado,0.8,0.9,175,0.0,0.02,2l2yRJWgMiJkfPbRNiuC25,spotify:track:28MATCYDctW5EiBa2repxb
+18,唱,Ado,0.75,0.95,130,0.0,0.01,2tlOVDJ3lQsUxz22vPJ4c4,spotify:track:2tlOVDJ3lQsUxz22vPJ4c4
+19,ドライフラワー,優里,0.4,0.55,74,0.0,0.4,7dH0dpi751EoguDDg3xx6J,spotify:track:4kPlQKwtPrnqLgrmmKFSlA
+20,ベテルギウス,優里,0.5,0.65,82,0.0,0.3,4JK1kDUdH9RTBQrrSO1QfR,spotify:track:4JK1kDUdH9RTBQrrSO1QfR
+21,きらり,藤井風,0.8,0.7,116,0.0,0.1,spotify:track:3L7ISJTvKx56uhsF28aJ4p
+22,死ぬのがいいわ,藤井風,0.45,0.6,110,0.0,0.35,spotify:track:0HYAsQwJIO6FLqpyTeD3l6
+23,怪獣の花唄,Vaundy,0.75,0.9,150,0.0,0.05,spotify:track:7dTW21YAJxnAOiUh7Rtu9S
+24,踊り子,Vaundy,0.6,0.65,114,0.0,0.1,spotify:track:1YXot2MLAG9sttepCtBRM7
+25,ケセラセラ,Mrs. GREEN APPLE,0.85,0.85,124,0.0,0.05,spotify:track:0teqQ0PYqVDyyXJuPOyMhu
+26,青と夏,Mrs. GREEN APPLE,0.9,0.9,146,0.0,0.02,spotify:track:5BC6kr6etk2Y9J62AyI4i3
+27,点描の唄,Mrs. GREEN APPLE,0.45,0.55,80,0.0,0.5,spotify:track:1sIIlVrnPhrvmTrHtzM7tV
+28,パプリカ,Foorin,0.85,0.75,100,0.0,0.2,spotify:track:60t5lev16eczZXurTNf56k
+29,打上花火,DAOKO × 米津玄師,0.55,0.6,98,0.0,0.25,spotify:track:4IouQaO9GkaHC7AtMErdSa
+30,まちがいさがし,菅田将暉,0.4,0.55,80,0.0,0.4,spotify:track:55Ww4Pa1iIQMhh0MLMetjo
+31,虹,菅田将暉,0.5,0.5,78,0.0,0.55,spotify:track:7eqjbcOZTgZbV0lX2ghtfV
+32,香水,瑛人,0.6,0.4,105,0.0,0.85,spotify:track:786dSB84yrSaICJwCT7VxP
+33,猫,DISH//,0.45,0.55,76,0.0,0.3,spotify:track:6sIx7Cn37DGEhjy9hBP8Gx
+34,紅蓮華,LiSA,0.6,0.95,135,0.0,0.02,spotify:track:0qMip0B2D4ePEjBJvAtYre
+35,炎,LiSA,0.4,0.65,76,0.0,0.15,spotify:track:0cSkn2l67csUljEy0EEBPn
+36,前前前世,RADWIMPS,0.75,0.92,190,0.0,0.05,spotify:track:23eTkfMmq1LvqiDzeNHdVe
+37,なんでもないや,RADWIMPS,0.4,0.45,74,0.0,0.65,spotify:track:3SMpsXpVrFju2OUzFtJPws
+38,スパークル,RADWIMPS,0.45,0.5,118,0.0,0.7,spotify:track:1HdqMIGjLm8wkL4vWDcFPm
+39,恋,星野源,0.85,0.8,158,0.0,0.1,spotify:track:5Hu29JT4xtbRUBTZeOAjxW
+40,SUN,星野源,0.8,0.75,114,0.0,0.2,spotify:track:1DOZa2VoazIiDjGYlUQTlW
+41,Shape of You,Ed Sheeran,0.85,0.65,96,0.0,0.4,spotify:track:7qiZfU4dY1lWllzX7mPBI3
+42,Perfect,Ed Sheeran,0.4,0.4,95,0.0,0.6,spotify:track:0tgVpDi06FyKpA1z0VMD4v
+43,Bad Guy,Billie Eilish,0.55,0.45,135,0.02,0.3,spotify:track:2Fxmhks0bxGSBdJ92vM42m
+44,Stay,The Kid LAROI & Justin Bieber,0.75,0.75,170,0.0,0.05,spotify:track:5HCyWlXZPP0y6Gqq8TgA20
+45,Blinding Lights,The Weeknd,0.7,0.8,171,0.0,0.05,spotify:track:0VjIjW4GlUZAMYd2vXMi3b
+46,Closer,The Chainsmokers,0.65,0.75,95,0.0,0.1,spotify:track:7BKLCZ1jbUBVqRi2FVlTVw
+47,Something Just Like This,The Chainsmokers & Coldplay,0.6,0.75,103,0.0,0.05,spotify:track:6RUKPb4LETWmmr3iAEQktW
+48,Wake Me Up,Avicii,0.65,0.85,124,0.0,0.05,spotify:track:3B0irDyS69y5eAz15xV2Ee
+49,The Nights,Avicii,0.7,0.85,126,0.0,0.05,spotify:track:0ct6r3EGTcMLPtrXHDvVjc
+50,Faded,Alan Walker,0.3,0.6,90,0.05,0.1,spotify:track:698ItKASDavgwZ3WjaWjtz
+51,Let It Go,Idina Menzel,0.35,0.65,137,0.0,0.15,spotify:track:0qcr5FMsEO85NAQjrlDRKo
+52,Shake It Off,Taylor Swift,0.9,0.8,160,0.0,0.05,spotify:track:1CiVz2WkmZRwhU3A6J2Gjz
+53,Butter,BTS,0.85,0.75,110,0.0,0.05,spotify:track:6jjYDGxVJsWS0a5wlVF5vS
+54,Dynamite,BTS,0.9,0.8,114,0.0,0.02,spotify:track:5QDLhrAOJJdNAmCTJ8xMyW
+55,TT,TWICE,0.85,0.85,130,0.0,0.05,spotify:track:7b6WvfgtlRNR8PmHfNhWl5
+56,Feel Special,TWICE,0.75,0.88,129,0.0,0.05,spotify:track:14rWuS6yllHOdfZ8sZsZUj
+57,Make you happy,NiziU,0.85,0.85,160,0.0,0.05,spotify:track:3sFJmcdXoJ1G2rRW1Hc2x1
+58,恋するフォーチュンクッキー,AKB48,0.9,0.8,122,0.0,0.1,spotify:track:3Tw2WaAaeRj0YKtTUogJVz
+59,ヘビーローテーション,AKB48,0.85,0.9,158,0.0,0.05,spotify:track:13YE1VSvQ4t7wWCPlpK1Uw
+60,365日の紙飛行機,AKB48,0.7,0.6,104,0.0,0.3,spotify:track:0JncJnMiDjLpeYURyhFgch
+61,ポリリズム,Perfume,0.75,0.85,128,0.0,0.02,spotify:track:4Eyrl29TD7ssLcAKWzwsso
+62,チョコレイト・ディスコ,Perfume,0.85,0.9,128,0.0,0.01,spotify:track:35WLGytCEIVPLBPfhNPhTp
+63,R.Y.U.S.E.I.,三代目 J SOUL BROTHERS,0.7,0.9,128,0.0,0.05,spotify:track:2AVA9gTyJsZaan4PcsNHSn
+64,花束代わりにメロディーを,清水翔太,0.45,0.5,76,0.0,0.55,spotify:track:1NAlCfWm0SdXleAXFO7IAu
+65,Wherever you are,ONE OK ROCK,0.4,0.65,84,0.0,0.2,spotify:track:1TZjEATJpF5LaVL7oJHDMn
+66,完全感覚Dreamer,ONE OK ROCK,0.6,0.95,190,0.0,0.01,spotify:track:3x3xDJexQhxbFQUwCbUc0y
+67,Wasted Nights,ONE OK ROCK,0.5,0.85,108,0.0,0.05,spotify:track:0QOb6OYWyRzdUP4d4Imi61
+68,キセキ,GReeeeN,0.75,0.85,90,0.0,0.1,spotify:track:7ztdl6cnbJgHRdMkKldkts
+69,愛唄,GReeeeN,0.7,0.8,82,0.0,0.15,spotify:track:7iXHLtPosbHvglVSJ4rxLq
+70,遥か,GReeeeN,0.5,0.65,80,0.0,0.2,spotify:track:4wBFubvNAwVox8q4SYXHqU
+71,ひまわりの約束,秦基博,0.45,0.55,80,0.0,0.5,spotify:track:45jGOHwYKgsRYbAJ8DR61d
+72,奏(かなで),スキマスイッチ,0.45,0.6,78,0.0,0.3,spotify:track:5RbMlPFL4gVyEHW2lEOuzG
+73,全力少年,スキマスイッチ,0.85,0.85,134,0.0,0.1,spotify:track:3Ztjw8utVpcrzms1RrsJvR
+74,栄光の架橋,ゆず,0.55,0.65,74,0.0,0.35,spotify:track:0uOHiGSYDxuG5BNT9HYVGs
+75,夏色,ゆず,0.9,0.85,116,0.0,0.4,spotify:track:3nYe3TNoETmeXkseSdnUFz
+76,小さな恋のうた,MONGOL800,0.8,0.95,115,0.0,0.01,spotify:track:23atyJacJVHvB9RHBNhr35
+77,天体観測,BUMP OF CHICKEN,0.7,0.9,135,0.0,0.05,spotify:track:3hRRYgBeunE3PTmnzATTS0
+78,カルマ,BUMP OF CHICKEN,0.6,0.92,185,0.0,0.02,spotify:track:3Ht2iEekMrHRndj0sC5e2X
+79,リライト,ASIAN KUNG-FU GENERATION,0.5,0.95,173,0.0,0.01,spotify:track:3txqYlzoDZGLoW8MGll9tQ
+80,ソラニン,ASIAN KUNG-FU GENERATION,0.55,0.85,134,0.0,0.05,spotify:track:2H9YjQghPZ74vt0U4xHcKq
+81,千本桜,黒うさP feat.初音ミク,0.75,0.95,154,0.0,0.02,spotify:track:38mUTswfszVFQ952r89AP8
+82,シャルル,バルーン,0.6,0.9,145,0.0,0.05,spotify:track:54ezuGQj5s0ot4J7ktWb2h
+83,メルト,ryo (supercell) feat.初音ミク,0.7,0.85,170,0.0,0.05,spotify:track:1Omtr6THZJWjc5zaxrj1XU
+84,アスノヨゾラ哨戒班,Orangestar,0.65,0.92,120,0.0,0.05,spotify:track:75tQZI2X1VwNOPtOrOrdpl
+85,ただ君に晴れ,ヨルシカ,0.75,0.85,140,0.0,0.1,spotify:track:3wJHCry960drNlAUGrJLmz
+86,春泥棒,ヨルシカ,0.65,0.8,135,0.0,0.15,spotify:track:1rr2DJOxV0sHXeUXCAz1yf
+87,花に亡霊,ヨルシカ,0.5,0.65,118,0.0,0.3,spotify:track:3FUqp10RhCmMjyyB9extmo
+88,白日,King Gnu,0.45,0.75,94,0.0,0.15,spotify:track:172fMG26G2OoEzzg0wn26r
+89,飛行艇,King Gnu,0.6,0.85,86,0.0,0.05,spotify:track:5vsM9UppL2iTgOfenMB6Gz
+90,一途,King Gnu,0.55,0.95,160,0.0,0.05,spotify:track:7ncPjJBktLEOpstY5JOUMK
+91,Habit,SEKAI NO OWARI,0.7,0.85,120,0.0,0.05,spotify:track:2uMNMcjjUz8oNIxjIu20qE
+92,RPG,SEKAI NO OWARI,0.75,0.8,126,0.0,0.1,spotify:track:7facNrW6VRW8s3ICZ8G1uW
+93,Dragon Night,SEKAI NO OWARI,0.65,0.85,128,0.0,0.05,spotify:track:4XdzCpY4Ekv5SezuuFpBDG
+94,シュガーソングとビターステップ,UNISON SQUARE GARDEN,0.85,0.9,132,0.0,0.05,spotify:track:4at8MHaxe5hFxcXiO2PPd4
+95,オリオンをなぞる,UNISON SQUARE GARDEN,0.8,0.92,135,0.0,0.02,spotify:track:0opkjjC7nn6YO8NXzkDAPP
+96,シルエット,KANA-BOON,0.75,0.95,183,0.0,0.01,spotify:track:1di1C0QI6Y92yZPYn6XYAZ
+97,ないものねだり,KANA-BOON,0.8,0.9,166,0.0,0.02,spotify:track:1dsh4buvcBs2u7YtHy29c7
+98,ファーストラヴ,Uru,0.3,0.45,74,0.0,0.7,spotify:track:1aNlV4Nl3sxYwvBBupcSmu
+99,プロローグ,Uru,0.35,0.5,76,0.0,0.65,spotify:track:4YMukCV1BsdK8V9kZoQpT6
+100,アイノカタチ,MISIA,0.55,0.65,82,0.0,0.2,spotify:track:7mSVOYRseiZi20xtBKhHnF
+101,Everything,MISIA,0.4,0.55,75,0.0,0.3,spotify:track:6bkJ4p6uSKmSnKxYpmB4aG
+102,Mela!,緑黄色社会,0.85,0.88,135,0.0,0.05,spotify:track:6IO5nn84TKArsi3cjpIqaD
+103,花になって,緑黄色社会,0.75,0.92,160,0.0,0.02,spotify:track:2EmkTBTh964LQen4Vz0svg
+104,CITRUS,Da-iCE,0.5,0.8,85,0.0,0.15,spotify:track:2IL2asrtx7XM1y8fu2RMnR
+105,スターマイン,Da-iCE,0.8,0.9,130,0.0,0.05,spotify:track:15ioLYnlo3EqYyUNneuXJV
+106,Stand by me Stand by you.,平井大,0.75,0.65,95,0.0,0.3,spotify:track:7DyS11kB1YNrfDzQqtjmTh
+107,Slow & Easy,平井大,0.85,0.6,88,0.0,0.5,spotify:track:4b5oBON2DgamONUxvP4JyQ
+108,W/X/Y,Tani Yuuki,0.65,0.6,90,0.0,0.2,spotify:track:4IfrM44LofE9bSs6TDZS49
+109,Myra,Tani Yuuki,0.55,0.55,85,0.0,0.3,spotify:track:3YGkEsa1tSsWBVFEvwA42y
+110,Overdose,なとり,0.6,0.7,114,0.0,0.15,spotify:track:7b4fxkOA4NDr4tDylrb10K
+111,エジソン,水曜日のカンパネラ,0.7,0.8,130,0.0,0.1,spotify:track:2wRKOmpe6I7q6k69bkjuFU
+112,晩餐歌,tuki.,0.45,0.6,80,0.0,0.4,spotify:track:075HUD50Nuea3rNaABIsNZ
+113,ビリミリオン,優里,0.75,0.85,120,0.0,0.1,spotify:track:7M0dIdZWN1FDcveRdoOzbZ
+114,シンデレラボーイ,Saucy Dog,0.5,0.7,88,0.0,0.15,spotify:track:4ZIr1NSxVihtHcD6EnG65f
+115,いつか,Saucy Dog,0.45,0.65,85,0.0,0.2,spotify:track:5gjAdhfzftzFR7sriEYUCt
+116,勿忘,Awesome City Club,0.6,0.7,105,0.0,0.15,spotify:track:0XZyF9lv6diMt4bxThOL0h
+117,ぎゅっと。,もさを。,0.7,0.5,85,0.0,0.6,spotify:track:6nqfKM9JvQIiuAuzWZFvGW
+118,魔法の絨毯,川崎鷹也,0.65,0.45,80,0.0,0.75,spotify:track:3PK5ERLCyMuQ5Cb89GbZVL
+119,桜が降る夜は,あいみょん,0.6,0.7,105,0.0,0.25,spotify:track:0H2n6GpHAMlujiER71ubMB
+120,あの夢をなぞって,YOASOBI,0.75,0.85,135,0.0,0.05,spotify:track:5ptl2PXkiSth54HCuGO7vN
+121,怪物,YOASOBI,0.45,0.9,170,0.0,0.02,spotify:track:06XQvnJb53SUYmlWIhUXUi
+122,第ゼロ感,10-FEET,0.6,0.95,150,0.0,0.01,spotify:track:6zjk7Qbwb9DZ4ykUUoqknh
+123,KICK BACK,米津玄師,0.5,0.95,102,0.0,0.05,spotify:track:7oYCBKvdjrqp5vDbhDBuac
+124,Loser,米津玄師,0.55,0.85,115,0.0,0.1,spotify:track:7AqUE5AY514dbzeOAfJRa0
+125,ピースサイン,米津玄師,0.8,0.9,200,0.0,0.05,spotify:track:364JzOajs76bJymjHm3sVY
+126,Soranji,Mrs. GREEN APPLE,0.45,0.65,75,0.0,0.4,spotify:track:3YML5IHoqWbw9c9vJJvrvM
+127,ダンスホール,Mrs. GREEN APPLE,0.85,0.9,126,0.0,0.05,spotify:track:4NaaF28BeO9WzjDrSS71Nz
+128,インフェルノ,Mrs. GREEN APPLE,0.6,0.95,160,0.0,0.02,spotify:track:2vOAHp8PBBFYqvQUWSoITY
+129,WanteD! WanteD!,Mrs. GREEN APPLE,0.75,0.92,130,0.0,0.05,spotify:track:7M3TZDUNvaNBo0qtWVaZif
+130,僕のこと,Mrs. GREEN APPLE,0.45,0.7,72,0.0,0.25,spotify:track:0tnhoHUrHfcLi9hPknUFZ4
+131,115万キロのフィルム,Official髭男dism,0.7,0.75,97,0.0,0.15,spotify:track:278JqkBGkjDovOYAwE8TW7
+132,I LOVE...,Official髭男dism,0.65,0.8,95,0.0,0.1,spotify:track:5wWLNNwMAehpj83FU4Lz0m
+133,宿命,Official髭男dism,0.6,0.85,88,0.0,0.05,spotify:track:2yozZfRYHP7Elsymghu5t3
+134,Cry Baby,Official髭男dism,0.45,0.9,105,0.0,0.05,spotify:track:6wDntdm888mDo458RaYjGl
+135,Tokyo Drift,Teriyaki Boyz,0.7,0.85,115,0.0,0.05,spotify:track:0upFohXrGxIIAjyaJmCkMU
+136,桜,コブクロ,0.45,0.55,75,0.0,0.35,spotify:track:5Hi4IAtdFZzg6IfAVMd6lZ
+137,蕾,コブクロ,0.4,0.5,72,0.0,0.4,spotify:track:54TCi06LKnlO2NeSrdouQU
+138,粉雪,レミオロメン,0.45,0.75,82,0.0,0.15,spotify:track:1jonTMQX0g0VLgcw3Sn2LW
+139,3月9日,レミオロメン,0.5,0.6,80,0.0,0.25,spotify:track:4g066xFUp3cTUuTfOCPytT
+140,Story,AI,0.45,0.55,74,0.0,0.3,spotify:track:0V2axJ946WH1vt9t5SGMLV
+141,ハナミズキ,一青窈,0.4,0.5,70,0.0,0.4,spotify:track:0h9VlXphgiAHN1gQ9xtnNa
+142,雪の華,中島美嘉,0.35,0.45,72,0.0,0.5,spotify:track:6Zyizxfz4NXdCgVLwhuBNw
+143,瞳をとじて,平井堅,0.4,0.5,74,0.0,0.45,spotify:track:0JAQpusQK6R7w07s0UgcU3
+144,Pop Virus,星野源,0.75,0.8,95,0.0,0.15,spotify:track:4hQ5tBCwPRkzhFB424U63U
+145,不思議,星野源,0.7,0.7,100,0.0,0.2,spotify:track:6NKn02oJDkUkRa9IHbMe3n
+146,Beautiful,Superfly,0.65,0.85,90,0.0,0.1,spotify:track:2ruHYPN3a77Ra8WvvPyfwb
+147,愛をこめて花束を,Superfly,0.75,0.9,85,0.0,0.05,spotify:track:7CmWXD3w1xOO53AAO4LRVQ
+148,三日月,絢香,0.4,0.55,75,0.0,0.4,spotify:track:5SDVaYU4nfaIV0rNSlWSCa
+149,にじいろ,絢香,0.8,0.65,100,0.0,0.3,spotify:track:3JrxNi0sQ1Lnx8eGonp3Ma
+150,トリセツ,西野カナ,0.75,0.7,110,0.0,0.15,spotify:track:5eF8cIj2WhboTYtr24Ad5f
+151,Darling,西野カナ,0.8,0.65,95,0.0,0.2,spotify:track:5ifBjexppI1XZOx5eBqnJZ
+152,会いたくて 会いたくて,西野カナ,0.45,0.7,120,0.0,0.1,spotify:track:1ttY62k0xoJFqyMsCkWtYH
+153,Family Song,星野源,0.7,0.7,95,0.0,0.25,spotify:track:6XzDz5r1bGMkcOKeXQwTqM
+154,Lemonade,Lofi Girl,0.5,0.3,75,0.95,0.7,spotify:track:6RUVgEhk2kdYT6EfvKgAl7
+155,Midnight Drive,Chillhop Music,0.45,0.4,80,0.9,0.5,spotify:track:2SUpfkZqjqffsuY9NkCzpM
+156,Ocean Waves Chill,Lofi Beats,0.6,0.25,70,0.98,0.8,spotify:track:6e806DomcAK25eXdt2SaKP
+157,Sunset Cafe,Lofi Jazz,0.55,0.35,85,0.95,0.6,spotify:track:5zVbBeQqTUx4cwgjVSTccq
+158,Rainy Day Study,Lofi Girl,0.4,0.2,65,0.99,0.85,spotify:track:7jjYPzGDDJnC7BdN28BZTX
+159,Night City Lights,Synthwave,0.65,0.75,110,0.9,0.05,spotify:track:2IEiapv4UWl9RmsztciiSw
+160,Cyberpunk Run,Dark Synth,0.4,0.85,120,0.95,0.01,spotify:track:08x2KGwbeDBroANNjqPflE
+161,Summer Breeze Acoustic,Acoustic Guitar,0.7,0.4,90,0.95,0.9,spotify:track:3udhvSMkTv188jn9Dx3Bda
+162,Morning Piano,Piano Instrumental,0.6,0.3,75,0.95,0.95,spotify:track:2Ocw0MtLYxAP4yuh3noUF1
+163,Epic Mountain Trail,Orchestral,0.55,0.8,100,0.9,0.1,spotify:track:3x8Ycx6tNG6X6VPqakIMer
+164,High Speed Chase,EDM Instrumental,0.65,0.95,150,0.85,0.02,spotify:track:1SphYpzegC5wg8RV5kYkVv
+165,Deep Forest Walk,Ambient,0.5,0.25,60,0.98,0.85,spotify:track:78ddk2Nghi5nIFbNCn25vz
+166,Relaxing Spa,Healing Music,0.6,0.15,65,1.0,0.9,spotify:track:6Cy6f2XyMuU6IxJ8s6odhN
+167,Energetic Workout,Fitness EDM,0.75,0.95,128,0.8,0.05,spotify:track:2Ub2KkXSidlQXKGKfQeESs
+168,Nostalgic Evening,Acoustic Cafe,0.55,0.35,80,0.95,0.8,spotify:track:28IHnAD8bZgnWCkOOu8Odt
+169,Lo-Fi Highway,Lofi Hip Hop,0.5,0.45,85,0.9,0.4,spotify:track:2Iuv1S0x14oAvxZO4uKlrL
+170,Neon Tokyo,Future Bass,0.65,0.85,140,0.85,0.05,spotify:track:1tpkl17QxNMYJZSmp3WG8t
+171,Aesthetic Sunset,Vaporwave,0.6,0.55,95,0.8,0.15,spotify:track:6waY6NfCu8Hrr78RcaVbyh
+172,Calm Ocean,Nature Sounds,0.5,0.1,0,1.0,0.95,spotify:track:2ZQKqJeZaCYAZiCAe2OK8s
+173,Windy Road,Acoustic Folk,0.65,0.45,100,0.9,0.75,spotify:track:2LXxHpsjNuiTtwwZkKOaXd
+174,Heavy Traffic Angry,Metal Instrumental,0.3,0.95,180,0.85,0.01,spotify:track:5E7lDqLesdsjMJ6TFkohdR
+175,Snowy Night Chill,Ambient Piano,0.45,0.2,70,0.95,0.9,spotify:track:7M5VEWfxUdE1xvZGVnPIPJ
+176,Sunny Day Drive,Upbeat Pop Inst,0.85,0.75,120,0.9,0.1,spotify:track:4QGwoVteQxF8pbh8VMLJiR
+177,Cloudy Mood,Sad Piano,0.35,0.3,65,0.95,0.9,spotify:track:1iD1lhxry6NllWgAFu44Hi
+178,Racing Pulse,Drum and Bass,0.5,0.98,174,0.9,0.01,spotify:track:13TPzJu6V53iOqHmuEXZSD
+179,Gentle Awakening,Morning Acoustic,0.75,0.35,85,0.95,0.85,spotify:track:62v0Vv2sEwXiHv3I1o1Gj2
+180,Highway Cruising,City Pop Inst,0.7,0.65,110,0.85,0.2,spotify:track:2XFtoZ909xWjSbqyTzmqNA
+181,Mountain Top View,Epic Orchestral,0.65,0.85,115,0.9,0.1,spotify:track:00TCkYt97Ljlgf98PK415c
+182,Narrow Alley Tension,Dark Ambient,0.4,0.4,90,0.95,0.4,spotify:track:0Mc2pChVamPKixBIAbCkTI
+183,Sleepy Passenger,Lulling Harp,0.5,0.15,60,0.95,0.95,spotify:track:0QH4pq0EwSrVJIx2oqjpOZ
+184,Tired Eyes,Slow Lofi,0.45,0.25,70,0.9,0.7,spotify:track:6g48vpikqU2atsrDXdGzKo
+185,Rain on Roof,ASMR Beats,0.55,0.2,75,0.98,0.8,spotify:track:4motlanWgZbAUo5cikIzr8
+186,Focus Timer 25,Study Lofi,0.6,0.4,80,0.95,0.6,spotify:track:2fTdbI1uvDoybdHhKT8gc1
+187,Endless Road,Trance,0.65,0.85,138,0.9,0.05,spotify:track:6xznvu8F4dsQzzKx6J4QBT
+188,Joyful Journey,Happy Acoustic,0.85,0.6,110,0.95,0.8,spotify:track:7vCnzXykJbsuxDKk7hDwVW
+189,Lonely Highway,Melancholy Synth,0.4,0.55,90,0.9,0.3,spotify:track:3qN6aTcxWNMofLpxX6LAlQ
+190,Danger Ahead,Tense Cinematic,0.3,0.8,130,0.95,0.1,spotify:track:3p1b3jT6y7OW15zgjWhpAN
+191,Happy Accident,Playful Jazz,0.8,0.65,120,0.9,0.7,spotify:track:2voa1SLf1SUkHeVUDi9Eis
+192,Smooth Operator,Smooth Jazz,0.7,0.5,95,0.9,0.6,spotify:track:48MPN0f1OeyrTSVxi01Lt5
+193,Night Owl,Deep House,0.6,0.75,122,0.85,0.1,spotify:track:358cZ9iECfqrCgQQ5gC1ca
+194,Generated Track 1 (Ballad),Various Artists,0.32,0.4,66,0.07,0.7,
+195,Generated Track 2 (EDM/Club),Various Artists,0.52,0.8,128,0.52,0.01,spotify:track:1SNGhTi1hv9Tqz9Ea1D4gQ
+196,Generated Track 3 (Rock/Metal),Various Artists,0.61,0.86,199,0.14,0.02,spotify:track:2956rtveW7Z181geLeMX05
+197,Generated Track 4 (Acoustic/Folk),Various Artists,0.57,0.32,79,0.23,0.63,
+198,Generated Track 5 (Acoustic/Folk),Various Artists,0.8,0.28,90,0.41,0.71,
+199,Generated Track 6 (Acoustic/Folk),Various Artists,0.56,0.37,88,0.19,0.64,
+200,Generated Track 7 (EDM/Club),Various Artists,0.63,0.93,147,0.77,0.06,spotify:track:1SNGhTi1hv9Tqz9Ea1D4gQ
