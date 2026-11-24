@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 
 // ==========================================
-// 型定義（C# SongTrack 準拠）
+// 型定義
 // ==========================================
 interface SongTrack {
   trackId: number;
@@ -36,15 +36,16 @@ interface SongTrack {
   energy: number;
   bpm: number;
   instrumentalness: number;
-  vibe: string;
   acousticness: number;
+  vibe: string;
   spotifyId: string;
   trackUri: string;
   evaluation: number; // 0: 未評価, 1: 違和感なし(Match), 2: 違和感あり(Discomfort)
 }
 
 type ExperimentPhase = "setup" | "running" | "finished";
-type PlayMode = "order" | "adaptive";
+type PlayMode = "adaptive" | "order";
+type IsoStrategy = "Arousal First" | "Valence First" | "Linear" | "Dynamic";
 
 const clamp = (val: number, min: number, max: number) =>
   Math.min(Math.max(val, min), max);
@@ -65,14 +66,25 @@ const MOOD_LABELS: Record<string, string> = {
   BtnMoodMix: "おまかせ (Auto / MIX)",
 };
 
+// 月ごとの基準平均気温（気温偏差モデル用）
+const SEASON_AVG_TEMP: Record<string, number> = {
+  Spring: 16,
+  Summer: 27,
+  Autumn: 18,
+  Winter: 7,
+};
+
 export default function SdvExperimentApp() {
-  // 楽曲DB ＆ 再生状態（C#と同じく Track_ID 順管理 + URIキャッシュ）
+  // 楽曲DB ＆ 再生状態
   const [tracks, setTracks] = useState<SongTrack[]>([]);
   const tracksRef = useRef<SongTrack[]>([]);
   const [currentTrackIdx, setCurrentTrackIdx] = useState<number>(0);
+  const [historyIndices, setHistoryIndices] = useState<number[]>([]);
+  const [playedIds, setPlayedIds] = useState<number[]>([]);
+  const [dynamicPhaseStep, setDynamicPhaseStep] = useState<number>(0); // 60分超の揺らぎ位相
   const [isChangingTrack, setIsChangingTrack] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string>("待機中...");
-  const [playMode, setPlayMode] = useState<PlayMode>("order"); // デフォルト：C#と同じTrack_ID順再生
+  const [playMode, setPlayMode] = useState<PlayMode>("adaptive"); // デフォルト：イベント・シーン一覧表フル版
 
   // 実験フェーズ＆被験者情報
   const [phase, setPhase] = useState<ExperimentPhase>("setup");
@@ -80,16 +92,18 @@ export default function SdvExperimentApp() {
   const [sessionId, setSessionId] = useState<string>("");
   const [setupStep, setSetupStep] = useState<1 | 2 | 3>(1);
 
-  // 2タップ入力（C#のボタン名と完全一致）
+  // 2タップ入力（C#ボタン名準拠）
   const [selectedWho, setSelectedWho] = useState<string>("BtnWhoSolo");
   const [selectedMood, setSelectedMood] = useState<string>("BtnMoodChill");
 
-  // 車両・環境コンテキスト（GPS & Open-Meteo 自動取得 + 実験者手動オーバーライド）
+  // 車両・環境コンテキスト（GPS & Open-Meteo 自動取得 + 実験者手動操作）
   const [showControlPanel, setShowControlPanel] = useState<boolean>(true);
   const [speedKph, setSpeedKph] = useState<number>(50);
   const [engineRpm, setEngineRpm] = useState<number>(2000);
   const [drivingMinutes, setDrivingMinutes] = useState<number>(15);
   const [weather, setWeather] = useState<string>("Sunny");
+  const [tempC, setTempC] = useState<number>(20);
+  const [sunshineScore, setSunshineScore] = useState<number>(0.8);
   const [displayWeatherStr, setDisplayWeatherStr] = useState<string>("取得中...");
   const [displayLocationStr, setDisplayLocationStr] = useState<string>("位置取得中...");
   const [season, setSeason] = useState<string>("Autumn");
@@ -103,20 +117,23 @@ export default function SdvExperimentApp() {
   const [isHardBraking, setIsHardBraking] = useState<boolean>(false);
   const [envChangeBanner, setEnvChangeBanner] = useState<string | null>(null);
 
+  // 閉ループ学習オフセット（評価1/2によるセッション内重み更新）
+  const [learnedShiftV, setLearnedShiftV] = useState<number>(0);
+  const [learnedShiftE, setLearnedShiftE] = useState<number>(0);
+
   // DB保存状態＆メモ
   const [dbStatus, setDbStatus] = useState<string>("待機中");
   const [savedCount, setSavedCount] = useState<number>(0);
   const [evalComment, setEvalComment] = useState<string>("");
 
-  const prevEnvRef = useRef({ weather, location, timeOfDay });
+  const prevEnvRef = useRef({ weather, location, timeOfDay, season });
 
-  // tracksステートの最新値をrefにも同期
   useEffect(() => {
     tracksRef.current = tracks;
   }, [tracks]);
 
   // ====================================================================
-  // 1. public/sdv_music_db.csv 読み込み（C# LoadMusicCsv 移植）
+  // 1. public/sdv_music_db.csv 読み込み
   // ====================================================================
   useEffect(() => {
     fetch("/sdv_music_db.csv")
@@ -143,8 +160,8 @@ export default function SdvExperimentApp() {
               energy: parseFloat(p[4].trim()) || 0.5,
               bpm: parseFloat(p[5].trim()) || 100,
               instrumentalness: parseFloat(p[6].trim()) || 0,
+              acousticness: isNumericCol7 ? numericCol7 : 0.2,
               vibe: isNumericCol7 ? "" : col7,
-              acousticness: isNumericCol7 ? numericCol7 : 0,
               spotifyId: (p[8] || "").trim(),
               trackUri: (p[8] || "").trim() ? `spotify:track:${(p[8] || "").trim()}` : "",
               evaluation: 0,
@@ -160,13 +177,28 @@ export default function SdvExperimentApp() {
   }, []);
 
   // ====================================================================
-  // 2. GPS + Open-Meteo 天気自動取得（C# FetchAndUpdateWeatherContextAsync 移植）
+  // 2. GPS + Open-Meteo 天気・気温・時間帯・季節 自動取得
   // ====================================================================
   const fetchWeatherAndLocation = async () => {
     setDisplayLocationStr("位置取得中...");
     setDisplayWeatherStr("天気取得中...");
 
-    // デフォルト座標（C#と同じ福岡の座標）
+    // 現在時刻から時間帯・季節を自動初期設定
+    const now = new Date();
+    const hour = now.getHours();
+    if (hour >= 5 && hour < 10) setTimeOfDay("Morning");
+    else if (hour >= 10 && hour < 16) setTimeOfDay("Day");
+    else if (hour >= 16 && hour < 18) setTimeOfDay("Evening");
+    else if (hour >= 18 && hour < 22) setTimeOfDay("Night");
+    else setTimeOfDay("LateNight");
+
+    const month = now.getMonth() + 1;
+    if (month >= 3 && month <= 5) setSeason("Spring");
+    else if (month >= 6 && month <= 8) setSeason("Summer");
+    else if (month >= 9 && month <= 11) setSeason("Autumn");
+    else setSeason("Winter");
+
+    // デフォルト座標（福岡）
     let latitude = 33.5902;
     let longitude = 130.4017;
 
@@ -182,7 +214,7 @@ export default function SdvExperimentApp() {
         latitude = pos.coords.latitude;
         longitude = pos.coords.longitude;
       } catch {
-        // 位置情報未許可・タイムアウト時は福岡デフォルトを使用
+        // 位置情報未許可時は福岡デフォルト
       }
     }
 
@@ -201,19 +233,28 @@ export default function SdvExperimentApp() {
       const temperature: number = current.temperature_2m ?? 20;
       const precipitation: number = current.precipitation ?? 0;
 
-      // C# ApplyWeatherMusicControl と完全一致する判定ロジック
+      setTempC(Math.round(temperature));
+
       if (weatherCode === 71 || weatherCode === 73 || weatherCode === 75) {
         setWeather("Snow");
+        setSunshineScore(0.1);
         setDisplayWeatherStr(`${temperature.toFixed(1)}°C (雪)`);
+      } else if (weatherCode >= 95 || precipitation >= 10) {
+        setWeather("HeavyRain");
+        setSunshineScore(0.0);
+        setDisplayWeatherStr(`${temperature.toFixed(1)}°C (豪雨/雷雨)`);
       } else if ((weatherCode >= 51 && weatherCode <= 67) || precipitation > 0) {
         setWeather("Rain");
+        setSunshineScore(0.1);
         setDisplayWeatherStr(`${temperature.toFixed(1)}°C (雨)`);
       } else if (weatherCode === 0 || weatherCode === 1) {
         setWeather("Sunny");
+        setSunshineScore(0.9);
         setDisplayWeatherStr(`${temperature.toFixed(1)}°C (晴れ)`);
       } else {
         setWeather("Cloudy");
-        setDisplayWeatherStr(`${temperature.toFixed(1)}°C (曇り/その他)`);
+        setSunshineScore(0.5);
+        setDisplayWeatherStr(`${temperature.toFixed(1)}°C (曇り)`);
       }
     } catch {
       setDisplayWeatherStr("天気取得エラー");
@@ -225,27 +266,26 @@ export default function SdvExperimentApp() {
   }, []);
 
   // ====================================================================
-  // 3. 2タップUI ＆ コンテキスト演算（C# BtnWho_Click / BtnMood_Click 移植）
+  // 3. ★ イベント・シーン一覧表 フル版 中間処理エンジン
   // ====================================================================
-  const targetParams = useMemo(() => {
+  const engineResult = useMemo(() => {
     const logs: string[] = [];
 
-    // 1タップ目 (Who) ベースレンジ（C#と完全同一）
+    // ----------------------------------------------------
+    // Step 1: 2タップUI ベースレンジ決定（C#完全準拠）
+    // ----------------------------------------------------
     let baseMinV = 0.2, baseMaxV = 1.0, baseMinE = 0.1, baseMaxE = 0.9;
     switch (selectedWho) {
-      case "BtnWhoSolo":
-        baseMinV = 0.2; baseMaxV = 1.0; baseMinE = 0.1; baseMaxE = 0.9; break;
-      case "BtnWhoPartner":
-        baseMinV = 0.3; baseMaxV = 0.7; baseMinE = 0.2; baseMaxE = 0.7; break;
-      case "BtnWhoFriends":
-        baseMinV = 0.5; baseMaxV = 1.0; baseMinE = 0.5; baseMaxE = 0.9; break;
-      case "BtnWhoGroup":
-        baseMinV = 0.3; baseMaxV = 0.8; baseMinE = 0.2; baseMaxE = 0.6; break;
+      case "BtnWhoSolo":    baseMinV = 0.2; baseMaxV = 1.0; baseMinE = 0.1; baseMaxE = 0.9; break;
+      case "BtnWhoPartner": baseMinV = 0.3; baseMaxV = 0.7; baseMinE = 0.2; baseMaxE = 0.7; break;
+      case "BtnWhoFriends": baseMinV = 0.5; baseMaxV = 1.0; baseMinE = 0.5; baseMaxE = 0.9; break;
+      case "BtnWhoGroup":   baseMinV = 0.3; baseMaxV = 0.8; baseMinE = 0.2; baseMaxE = 0.6; break;
     }
 
-    // 2タップ目 (Mood) シフト計算（C#と完全同一）
-    let finalMinV = 0.2, finalMaxV = 1.0, finalMinE = 0.1, finalMaxE = 0.9;
-    if (selectedMood !== "BtnMoodMix") {
+    let minV = 0.2, maxV = 1.0, minE = 0.1, maxE = 0.9;
+    if (selectedMood === "BtnMoodMix") {
+      logs.push(`[1. 2タップ基準] ${WHO_LABELS[selectedWho]} × MIX ➔ 全開放レンジ`);
+    } else {
       let shiftV = 0.0, shiftE = 0.0;
       switch (selectedMood) {
         case "BtnMoodChill":     shiftV = +0.0;  shiftE = -0.25; break;
@@ -254,51 +294,298 @@ export default function SdvExperimentApp() {
         case "BtnMoodFocus":     shiftV = +0.0;  shiftE = +0.35; break;
         case "BtnMoodEmotional": shiftV = -0.15; shiftE = -0.15; break;
       }
-      finalMinV = clamp(baseMinV + shiftV, 0.1, 1.0);
-      finalMaxV = clamp(baseMaxV + shiftV, 0.2, 1.0);
-      finalMinE = clamp(baseMinE + shiftE, 0.1, 1.0);
-      finalMaxE = clamp(baseMaxE + shiftE, 0.2, 1.0);
+      minV = clamp(baseMinV + shiftV, 0.1, 1.0);
+      maxV = clamp(baseMaxV + shiftV, 0.2, 1.0);
+      minE = clamp(baseMinE + shiftE, 0.1, 1.0);
+      maxE = clamp(baseMaxE + shiftE, 0.2, 1.0);
+      logs.push(
+        `[1. 2タップ基準] ${WHO_LABELS[selectedWho]} × ${MOOD_LABELS[selectedMood]} ➔ V:[${minV.toFixed(2)},${maxV.toFixed(2)}] E:[${minE.toFixed(2)},${maxE.toFixed(2)}]`
+      );
     }
 
-    logs.push(
-      `[2タップ基準] ${WHO_LABELS[selectedWho]} × ${MOOD_LABELS[selectedMood]} ➔ V:[${finalMinV.toFixed(2)}, ${finalMaxV.toFixed(2)}] E:[${finalMinE.toFixed(2)}, ${finalMaxE.toFixed(2)}]`
-    );
+    const twoTapBox = { minV, maxV, minE, maxE };
 
-    // ISO遷移戦略タグ
-    let isoStrategy = "Linear";
+    // 5次元目標パラメータ初期値
+    let minBpm = 60, maxBpm = 200;
+    let minInst = 0.0, maxInst = 1.0;
+    let minAc = 0.0, maxAc = 1.0;
+    let volumeNote = "100% (標準)";
+
+    // ISO原理の遷移戦略決定
+    let isoStrategy: IsoStrategy = "Linear";
     if (isDrowsy) {
       isoStrategy = "Arousal First";
-      finalMinV = 0.6; finalMaxV = 1.0; finalMinE = 0.8; finalMaxE = 1.0;
-      logs.push("🚨 [DMS眠気検知] Arousal First ➔ E≧0.8, V≧0.6 に強制固定");
     } else if (speedKph < 15 || isHardBraking) {
       isoStrategy = "Valence First";
-      finalMinE = 0.2; finalMaxE = 0.4;
-      logs.push("[渋滞/急ブレーキ] Valence First ➔ E:[0.20, 0.40] に鎮静化");
     } else if (drivingMinutes >= 60) {
       isoStrategy = "Dynamic";
-      logs.push("[長距離走行] Dynamic ➔ 揺らぎモード");
+    }
+    logs.push(`[2. ISO遷移戦略] ${isoStrategy}`);
+
+    // ----------------------------------------------------
+    // Step 2: 環境シフト（天気・季節・時間帯・景色）
+    // ----------------------------------------------------
+    let envV = 0.0, envE = 0.0;
+    const avgTemp = SEASON_AVG_TEMP[season] ?? 18;
+    const dTemp = tempC - avgTemp;
+
+    // 天気（一覧表 + 気温偏差モデル）
+    if (weather === "Sunny") {
+      const kE = 0.012, kV = 0.012, wS = 0.1;
+      const dE = clamp(kE * dTemp, -0.1, 0.2);
+      const dV = clamp(kV * dTemp + wS * sunshineScore, -0.05, 0.25);
+      envE += dE;
+      envV += dV;
+      minBpm = Math.max(minBpm, 105);
+      maxBpm = Math.min(maxBpm, 130);
+      maxInst = Math.min(maxInst, 0.3);
+      logs.push(
+        `[3. 天気: 晴れ] 気温偏差(ΔT=${dTemp >= 0 ? "+" : ""}${dTemp}℃, 日照=${sunshineScore}) ➔ ΔV:${dV >= 0 ? "+" : ""}${dV.toFixed(2)}, ΔE:${dE >= 0 ? "+" : ""}${dE.toFixed(2)}, BPM[105,130], Inst<0.3`
+      );
+    } else if (weather === "Cloudy") {
+      envV -= 0.05; envE -= 0.1;
+      minBpm = Math.max(minBpm, 80); maxBpm = Math.min(maxBpm, 110);
+      logs.push(`[3. 天気: 曇り] やや落ち着いたトーン ➔ V-0.05, E-0.10, BPM[80,110]`);
+    } else if (weather === "Rain") {
+      envV -= 0.1; envE -= 0.2;
+      minBpm = Math.max(minBpm, 75); maxBpm = Math.min(maxBpm, 105);
+      minAc = Math.max(minAc, 0.4);
+      logs.push(`[3. 天気: 雨] 鎮静・雨音調和 ➔ V-0.10, E-0.20, BPM[75,105], Ac≧0.4`);
+    } else if (weather === "Snow") {
+      envV -= 0.05; envE -= 0.2;
+      minBpm = Math.max(minBpm, 65); maxBpm = Math.min(maxBpm, 95);
+      minAc = Math.max(minAc, 0.5);
+      logs.push(`[3. 天気: 雪] スリップ緊張緩和 ➔ V-0.05, E-0.20, BPM[65,95], Ac≧0.5`);
     }
 
-    if (playMode === "order") {
-      logs.push("[再生モード] C#準拠：CSVのTrack_ID順で順番に再生中");
-    } else {
-      logs.push("[再生モード] 状況適応：算出レンジに最も近い曲を自動抽出");
+    // 季節（3-5春 / 6-8夏 / 9-11秋 / 12-2冬）
+    if (season === "Summer" && weather === "Sunny") {
+      envV += 0.2; envE += 0.2;
+      minBpm = Math.max(minBpm, 115); maxBpm = Math.max(maxBpm, 135);
+      logs.push(`[4. 季節: 夏×晴れ] 外向性ピーク補正 ➔ V+0.20, E+0.20, BPM[115,135]`);
+    } else if (season === "Spring") {
+      envV += 0.1; envE += 0.05;
+      logs.push(`[4. 季節: 春] 爽やか補正 ➔ V+0.10, E+0.05`);
+    } else if (season === "Autumn") {
+      envE -= 0.1;
+      logs.push(`[4. 季節: 秋] 落ち着き補正 ➔ Vフラット, E-0.10`);
+    } else if (season === "Winter") {
+      envV -= 0.1; envE -= 0.3;
+      minBpm = Math.min(minBpm, 65); maxBpm = Math.min(maxBpm, 95);
+      minAc = Math.max(minAc, 0.5);
+      logs.push(`[4. 季節: 冬] 温かみスロー補正 ➔ V-0.10, E-0.30, BPM[65,95], Ac≧0.5`);
     }
+
+    // 時間帯（朝5-10 / 昼10-16 / 夕方16-18 / 夜18-22 / 深夜22-5）
+    if (timeOfDay === "Morning") {
+      envV += 0.2; envE += 0.2;
+      minBpm = Math.max(minBpm, 105); maxBpm = Math.max(maxBpm, 125);
+      maxInst = Math.min(maxInst, 0.3);
+      logs.push(`[5. 時間帯: 朝] 目覚め・爽快促進 ➔ V+0.20, E+0.20, BPM[105,125], Inst<0.3`);
+    } else if (timeOfDay === "Day") {
+      logs.push(`[5. 時間帯: 昼] 2タップ設定を最優先 (補正なし)`);
+    } else if (timeOfDay === "Evening") {
+      envV -= 0.1; envE -= 0.1;
+      minBpm = Math.min(minBpm, 80); maxBpm = Math.min(maxBpm, 105);
+      logs.push(`[5. 時間帯: 夕方] 夕暮れ疲労考慮 ➔ V-0.10, E-0.10, BPM[80,105]`);
+    } else if (timeOfDay === "Night") {
+      envE -= 0.15;
+      minBpm = Math.min(minBpm, 80); maxBpm = Math.min(maxBpm, 105);
+      minAc = Math.max(minAc, 0.2); maxAc = Math.min(maxAc, 0.7);
+      logs.push(`[5. 時間帯: 夜] リラックス寄り ➔ Vフラット, E-0.15, BPM[80,105], Ac[0.2,0.7]`);
+    } else if (timeOfDay === "LateNight") {
+      envV -= 0.1; envE -= 0.35;
+      minBpm = Math.min(minBpm, 65); maxBpm = Math.min(maxBpm, 90);
+      minInst = Math.max(minInst, 0.4);
+      logs.push(`[5. 時間帯: 深夜] 低エネルギー・チル固定 ➔ V-0.10, E-0.35, BPM[65,90], Inst≧0.4`);
+    }
+
+    // 閉ループ学習オフセットの加算
+    if (learnedShiftV !== 0 || learnedShiftE !== 0) {
+      envV += learnedShiftV;
+      envE += learnedShiftE;
+      logs.push(
+        `[閉ループ重み] 評価履歴オフセット ➔ ΔV:${learnedShiftV >= 0 ? "+" : ""}${learnedShiftV.toFixed(2)}, ΔE:${learnedShiftE >= 0 ? "+" : ""}${learnedShiftE.toFixed(2)}`
+      );
+    }
+
+    // シフト適用
+    minV = clamp(minV + envV, 0.1, 1.0);
+    maxV = clamp(maxV + envV, 0.2, 1.0);
+    minE = clamp(minE + envE, 0.1, 1.0);
+    maxE = clamp(maxE + envE, 0.2, 1.0);
+
+    // 景色・道路（一覧表の目標領域へブレンド統合）
+    if (location === "Coast") {
+      minV = (minV + 0.6) / 2; maxV = (maxV + 0.9) / 2;
+      minE = (minE + 0.5) / 2; maxE = (maxE + 0.7) / 2;
+      minBpm = Math.max(minBpm, 105); maxBpm = Math.max(maxBpm, 125);
+      maxAc = Math.min(maxAc, 0.6);
+      logs.push(`[6. 景色: 海辺] 開放感 ➔ V[0.6,0.9]・E[0.5,0.7]寄り, BPM[105,125]`);
+    } else if (location === "Mountain") {
+      minV = (minV + 0.5) / 2; maxV = (maxV + 0.8) / 2;
+      minE = (minE + 0.6) / 2; maxE = (maxE + 0.8) / 2;
+      minBpm = Math.max(minBpm, 110); maxBpm = Math.max(maxBpm, 130);
+      logs.push(`[6. 景色: 山道] ワインディング同調 ➔ V[0.5,0.8]・E[0.6,0.8]寄り, BPM[110,130]`);
+    } else if (location === "Field") {
+      minV = (minV + 0.5) / 2; maxV = (maxV + 0.7) / 2;
+      minE = (minE + 0.3) / 2; maxE = (maxE + 0.5) / 2;
+      minBpm = Math.min(minBpm, 80); maxBpm = Math.min(maxBpm, 105);
+      minAc = Math.max(minAc, 0.4);
+      logs.push(`[6. 景色: 野原] のどかな調和 ➔ V[0.5,0.7]・E[0.3,0.5]寄り, Ac≧0.4`);
+    } else if (location === "Viewpoint") {
+      minV = (minV + 0.7) / 2; maxV = (maxV + 1.0) / 2;
+      minE = (minE + 0.6) / 2; maxE = (maxE + 0.8) / 2;
+      minBpm = Math.max(minBpm, 110); maxBpm = Math.max(maxBpm, 135);
+      logs.push(`[6. 景色: 見晴らし良] 爽快感・ドラマチック ➔ V[0.7,1.0]・E[0.6,0.8]寄り, BPM[110,135]`);
+    }
+
+    // 長距離走行タイマー (>60分): 許容レンジ幅を ±0.15 で周期的に揺らす
+    if (drivingMinutes >= 60) {
+      const wave = Math.sin((dynamicPhaseStep * Math.PI) / 2) * 0.15;
+      minV = clamp(minV + wave - 0.08, 0.1, 0.9);
+      maxV = clamp(maxV + wave + 0.08, 0.2, 1.0);
+      minE = clamp(minE - wave - 0.05, 0.1, 0.9);
+      maxE = clamp(maxE - wave + 0.05, 0.2, 1.0);
+      logs.push(
+        `[7. 長距離タイマー (≧60分)] Dynamic揺らぎ適用 (位相:${dynamicPhaseStep}, 揺らぎ:${wave >= 0 ? "+" : ""}${wave.toFixed(2)})`
+      );
+    }
+
+    // ----------------------------------------------------
+    // Step 3: 車載CAN（渋滞/高速）＆ 安全・認知負荷の優先クランプ
+    // ----------------------------------------------------
+    if (speedKph < 15) {
+      minE = 0.2; maxE = 0.4;
+      minBpm = 70; maxBpm = 100;
+      minAc = Math.max(minAc, 0.4);
+      logs.push(`[8. CAN: 渋滞 (<15km/h)] 焦燥感緩和 ➔ E:[0.20,0.40], BPM[70,100], Ac≧0.4`);
+    } else if (speedKph >= 80) {
+      minE = Math.max(minE, 0.6); maxE = Math.max(maxE, 0.9);
+      minV = Math.max(minV, 0.5); maxV = Math.max(maxV, 0.8);
+      minBpm = Math.max(minBpm, 115); maxBpm = Math.max(maxBpm, 140);
+      maxInst = Math.min(maxInst, 0.2);
+      logs.push(`[8. CAN: 高速巡航 (≧80km/h)] 生体リズム同調 ➔ E:[0.60,0.90], V:[0.50,0.80], BPM[115,140], Inst<0.2`);
+    }
+
+    // 細道・狭路（認知負荷軽減 ★重要）
+    if (location === "Narrow") {
+      minE = 0.1; maxE = Math.min(maxE, 0.4);
+      minBpm = 60; maxBpm = Math.min(maxBpm, 95);
+      minInst = 0.5; maxInst = 1.0;
+      logs.push(`[9. 安全制御: 細道] 認知負荷軽減 ➔ E:[0.10,0.40], BPM≦95, Inst≧0.5(ボーカル抑制)`);
+    }
+
+    // 豪雨・雷雨（視界不良時の集中最優先）
+    if (weather === "HeavyRain") {
+      minV = clamp(minV, 0.3, 0.6); maxV = clamp(maxV, 0.35, 0.6);
+      minE = 0.1; maxE = Math.min(maxE, 0.4);
+      minBpm = 60; maxBpm = Math.min(maxBpm, 90);
+      minInst = 0.5; maxInst = 1.0;
+      volumeNote = "80% (-20% 自動減衰)";
+      logs.push(`[10. 悪天候制御: 豪雨/雷雨] 集中最優先 ➔ V:[0.3,0.6], E≦0.4, BPM≦90, Inst≧0.5, 音量-20%`);
+    }
+
+    // 突発イベント：急ブレーキ / 割り込まれ (>0.3g)
+    if (isHardBraking) {
+      minE = 0.1; maxE = Math.min(maxE, 0.4);
+      minV = clamp(minV + 0.2, 0.4, 0.9); maxV = clamp(maxV + 0.2, 0.6, 1.0);
+      minBpm = 60; maxBpm = Math.min(maxBpm, 90);
+      minAc = 0.5;
+      logs.push(`⚡ [突発イベント: 急ブレーキ (>0.3g)] ヒーリング移行 ➔ E-0.3(≦0.4), V+0.2, BPM≦90, Ac≧0.5`);
+    }
+
+    // ★最優先割り込み：DMS 眠気・疲労検知 (PERCLOS > 0.15)
+    if (isDrowsy) {
+      minV = 0.6; maxV = 1.0;
+      minE = 0.8; maxE = 1.0;
+      minBpm = 125; maxBpm = 200;
+      minInst = 0.0; maxInst = 0.1;
+      minAc = 0.0; maxAc = 0.35;
+      volumeNote = "110% (覚醒強調)";
+      logs.push(`🚨 [最優先割り込み: DMS眠気検知] 全制御上書き ➔ E≧0.80, V≧0.60, BPM≧125, ボーカル確定(Inst≦0.1)`);
+    }
+
+    // 上下限の整合保証
+    if (minV > maxV) minV = maxV;
+    if (minE > maxE) minE = maxE;
+    if (minBpm > maxBpm) minBpm = Math.max(60, maxBpm - 25);
+    if (minInst > maxInst) minInst = maxInst;
+    if (minAc > maxAc) minAc = maxAc;
 
     return {
-      minV: finalMinV,
-      maxV: finalMaxV,
-      minE: finalMinE,
-      maxE: finalMaxE,
       isoStrategy,
+      twoTapBox,
+      finalBox: { minV, maxV, minE, maxE },
+      minBpm,
+      maxBpm,
+      minInst,
+      maxInst,
+      minAc,
+      maxAc,
+      volumeNote,
       logs,
     };
-  }, [selectedWho, selectedMood, speedKph, drivingMinutes, isDrowsy, isHardBraking, playMode]);
+  }, [
+    selectedWho,
+    selectedMood,
+    speedKph,
+    drivingMinutes,
+    dynamicPhaseStep,
+    weather,
+    tempC,
+    sunshineScore,
+    season,
+    timeOfDay,
+    location,
+    isDrowsy,
+    isHardBraking,
+    learnedShiftV,
+    learnedShiftE,
+  ]);
+
+  // 5次元特徴空間での完全一致候補リスト（グラフ描画＆選曲用）
+  const matchedTracks = useMemo(() => {
+    const { finalBox, minBpm, maxBpm, minInst, maxInst, minAc, maxAc } = engineResult;
+    return tracks.filter(
+      (t) =>
+        t.valence >= finalBox.minV &&
+        t.valence <= finalBox.maxV &&
+        t.energy >= finalBox.minE &&
+        t.energy <= finalBox.maxE &&
+        t.bpm >= minBpm &&
+        t.bpm <= maxBpm &&
+        t.instrumentalness >= minInst &&
+        t.instrumentalness <= maxInst &&
+        t.acousticness >= minAc &&
+        t.acousticness <= maxAc
+    );
+  }, [tracks, engineResult]);
+
+  // 5次元ペナルティ距離（レンジ内なら0、外れた分だけ距離を加算）
+  const calcRangePenalty = (t: SongTrack) => {
+    const { finalBox, minBpm, maxBpm, minInst, maxInst, minAc, maxAc } = engineResult;
+    const rangeDist = (val: number, min: number, max: number) =>
+      val < min ? min - val : val > max ? val - max : 0;
+
+    const dV = rangeDist(t.valence, finalBox.minV, finalBox.maxV) * 2.0;
+    const dE = rangeDist(t.energy, finalBox.minE, finalBox.maxE) * 2.2;
+    const dBpm = (rangeDist(t.bpm, minBpm, maxBpm) / 100) * 1.2;
+    const dInst = rangeDist(t.instrumentalness, minInst, maxInst) * 1.8;
+    const dAc = rangeDist(t.acousticness, minAc, maxAc) * 0.8;
+
+    // 範囲内の曲同士はターゲット中心への近さで微差をつける
+    const cV = (finalBox.minV + finalBox.maxV) / 2;
+    const cE = (finalBox.minE + finalBox.maxE) / 2;
+    const centerBias = Math.hypot(t.valence - cV, t.energy - cE) * 0.15;
+
+    return dV + dE + dBpm + dInst + dAc + centerBias;
+  };
 
   // ====================================================================
-  // 4. Spotify Track ID 自動検索＋キャッシュ＋再生準備（C# PlayNextInOrderTrack 移植）
+  // 4. Spotify Track ID 自動検索 ＋ キャッシュ ＋ 再生準備
   // ====================================================================
-  const loadAndPlayTrackAtIndex = async (targetIdx: number) => {
+  const loadAndPlayTrackAtIndex = async (targetIdx: number, pushHistory = true) => {
     const list = tracksRef.current;
     if (list.length === 0 || isChangingTrack) return;
 
@@ -306,11 +593,15 @@ export default function SdvExperimentApp() {
     const normalizedIdx = ((targetIdx % list.length) + list.length) % list.length;
     const selected = list[normalizedIdx];
 
+    if (pushHistory && phase === "running") {
+      setHistoryIndices((prev) => [...prev, currentTrackIdx]);
+    }
     setCurrentTrackIdx(normalizedIdx);
+    setPlayedIds((prev) => [...prev.slice(-14), selected.trackId]); // 直近15曲の重複回避
+    setDynamicPhaseStep((s) => s + 1);
     setStatusMessage(`[ID:${selected.trackId}] 再生準備中... ${selected.trackName}`);
 
     try {
-      // 初回再生時にサーバーAPI経由でSpotify IDを自動検索してメモリキャッシュ（CSVへのID手入力不要）
       if (!selected.spotifyId) {
         const res = await fetch(
           `/api/spotify-search?track=${encodeURIComponent(selected.trackName)}&artist=${encodeURIComponent(selected.artistName)}`
@@ -333,7 +624,7 @@ export default function SdvExperimentApp() {
       const readyTrack = tracksRef.current[normalizedIdx];
       if (readyTrack.spotifyId) {
         setStatusMessage(
-          `[${normalizedIdx + 1}/${list.length}曲${readyTrack.vibe ? ` | ${readyTrack.vibe}` : ""}] 再生準備完了: ${readyTrack.artistName} - ${readyTrack.trackName}`
+          `[ID:${readyTrack.trackId} | 候補${matchedTracks.length}曲] 再生準備完了: ${readyTrack.artistName} - ${readyTrack.trackName}`
         );
       } else {
         setStatusMessage(`エラー: ${readyTrack.trackName} がSpotifyで見つかりませんでした`);
@@ -342,35 +633,37 @@ export default function SdvExperimentApp() {
       console.error(err);
       setStatusMessage("Spotify検索エラー（環境変数を確認してください）");
     } finally {
-      // C#と同じく0.4秒の連打防止クールタイム
       setTimeout(() => setIsChangingTrack(false), 400);
     }
   };
 
-  // 次の曲のインデックスを決める（Track_ID順 or 状況適応）
-  const resolveNextIndex = (fromIdx: number): number => {
+  // 次の曲のインデックスを選出（一覧表フル版 5次元スコアリング vs CSV ID順）
+  const resolveNextIndex = (excludeTrackId?: number): number => {
     const list = tracksRef.current;
     if (list.length === 0) return 0;
 
     if (playMode === "order") {
-      return (fromIdx + 1) % list.length;
+      return (currentTrackIdx + 1) % list.length;
     }
 
-    // 状況適応モード：ターゲット中心に最も近い未再生寄りの候補から選択
-    const cV = (targetParams.minV + targetParams.maxV) / 2;
-    const cE = (targetParams.minE + targetParams.maxE) / 2;
-    const candidates = list
-      .map((t, idx) => ({ t, idx, dist: Math.hypot(t.valence - cV, t.energy - cE) }))
-      .filter((x) => x.idx !== fromIdx)
-      .sort((a, b) => a.dist - b.dist)
-      .slice(0, 8);
+    // 未再生寄りの候補を優先してスコアリング
+    const scored = list
+      .map((t, idx) => ({
+        t,
+        idx,
+        penalty: calcRangePenalty(t) + (playedIds.includes(t.trackId) ? 0.6 : 0),
+      }))
+      .filter((x) => x.t.trackId !== excludeTrackId)
+      .sort((a, b) => a.penalty - b.penalty);
 
-    const pick = candidates[Math.floor(Math.random() * candidates.length)];
-    return pick ? pick.idx : (fromIdx + 1) % list.length;
+    // 上位5曲からランダム選出（同じ条件で同じ1曲ばかりになるのを防ぐ）
+    const topK = scored.slice(0, Math.min(5, scored.length));
+    const chosen = topK[Math.floor(Math.random() * topK.length)];
+    return chosen ? chosen.idx : 0;
   };
 
   // ====================================================================
-  // 5. Supabase ログ保存（C# AppendEvalLog 移植）
+  // 5. Supabase ログ保存
   // ====================================================================
   const saveLogToSupabase = async (
     track: SongTrack,
@@ -389,19 +682,19 @@ export default function SdvExperimentApp() {
       session_id: sessionId,
       who_selection: WHO_LABELS[selectedWho] || selectedWho,
       mood_selection: MOOD_LABELS[selectedMood] || selectedMood,
-      iso_strategy: targetParams.isoStrategy,
+      iso_strategy: engineResult.isoStrategy,
       event_type: eventType,
       speed_kph: speedKph,
-      weather: displayWeatherStr || weather,
+      weather: `${weather} (${displayWeatherStr})`,
       location: `${location} (${displayLocationStr})`,
       time_of_day: timeOfDay,
       season,
       is_drowsy: isDrowsy,
       is_hard_braking: isHardBraking,
-      target_v_min: Number(targetParams.minV.toFixed(2)),
-      target_v_max: Number(targetParams.maxV.toFixed(2)),
-      target_e_min: Number(targetParams.minE.toFixed(2)),
-      target_e_max: Number(targetParams.maxE.toFixed(2)),
+      target_v_min: Number(engineResult.finalBox.minV.toFixed(2)),
+      target_v_max: Number(engineResult.finalBox.maxV.toFixed(2)),
+      target_e_min: Number(engineResult.finalBox.minE.toFixed(2)),
+      target_e_max: Number(engineResult.finalBox.maxE.toFixed(2)),
       track_id: track.trackId,
       track_name: track.trackName,
       artist_name: track.artistName,
@@ -409,7 +702,7 @@ export default function SdvExperimentApp() {
       track_energy: track.energy,
       track_bpm: Math.round(track.bpm),
       evaluation: evalLabel,
-      evaluation_score: track.evaluation, // C#準拠：0=未評価, 1=マッチ, 2=いまいち
+      evaluation_score: track.evaluation, // 0=未評価, 1=違和感なし(Match), 2=違和感あり(Bad)
       comment: [note, evalComment.trim()].filter(Boolean).join(" / ") || null,
     };
 
@@ -431,7 +724,7 @@ export default function SdvExperimentApp() {
   };
 
   // ====================================================================
-  // 6. 評価ボタン（C# BtnEval_Click：パターンA ➔ 曲は進めない！）
+  // 6. 評価ボタン（パターンA：押しても曲は進めない＋閉ループ重み更新）
   // ====================================================================
   const handleEvalClick = async (evalValue: 1 | 2) => {
     const current = tracksRef.current[currentTrackIdx];
@@ -442,8 +735,15 @@ export default function SdvExperimentApp() {
     tracksRef.current = updatedList;
     setTracks(updatedList);
 
+    // 閉ループ学習：Match(1)ならその曲方向へ、Bad(2)なら逆方向へ重みを微調整
+    const cV = (engineResult.finalBox.minV + engineResult.finalBox.maxV) / 2;
+    const cE = (engineResult.finalBox.minE + engineResult.finalBox.maxE) / 2;
+    const sign = evalValue === 1 ? 1 : -1;
+    setLearnedShiftV((p) => clamp(p + sign * 0.05 * (current.valence - cV), -0.2, 0.2));
+    setLearnedShiftE((p) => clamp(p + sign * 0.05 * (current.energy - cE), -0.2, 0.2));
+
     const evalText = evalValue === 1 ? "👍 違和感なし (Match)" : "👎 違和感あり (Bad)";
-    setStatusMessage(`【評価完了】 ${evalText} と記録しました (値: ${evalValue}) ※曲は継続再生`);
+    setStatusMessage(`【評価完了】 ${evalText} を記録しました (値:${evalValue}) ※曲は継続再生`);
 
     await saveLogToSupabase(
       updatedList[currentTrackIdx],
@@ -454,7 +754,7 @@ export default function SdvExperimentApp() {
   };
 
   // ====================================================================
-  // 7. 次の曲（スキップ）（C# BtnNextTrack_Click 移植）
+  // 7. 次の曲へ（スキップ／コンディション再確認して再選曲）
   // ====================================================================
   const handleNextTrackClick = async () => {
     if (isChangingTrack || tracksRef.current.length === 0) return;
@@ -469,33 +769,38 @@ export default function SdvExperimentApp() {
     }
 
     setEnvChangeBanner(null);
-    const nextIdx = resolveNextIndex(currentTrackIdx);
-    await loadAndPlayTrackAtIndex(nextIdx);
+    const nextIdx = resolveNextIndex(current?.trackId);
+    await loadAndPlayTrackAtIndex(nextIdx, true);
   };
 
   // ====================================================================
-  // 8. 前の曲へ戻る（C# BtnPrevTrack_Click：評価を0にリセットする機能付き）
+  // 8. 前の曲へ戻る（履歴を戻り、戻った曲の評価を0にリセット）
   // ====================================================================
   const handlePrevTrackClick = async () => {
     const list = tracksRef.current;
     if (isChangingTrack || list.length === 0) return;
 
-    const prevIdx = (currentTrackIdx - 1 + list.length) % list.length;
+    const prevIdx =
+      historyIndices.length > 0
+        ? historyIndices[historyIndices.length - 1]
+        : (currentTrackIdx - 1 + list.length) % list.length;
 
-    // 1. 戻る元（今流れていた曲）を PREV_FROM として記録
+    if (historyIndices.length > 0) {
+      setHistoryIndices((prev) => prev.slice(0, -1));
+    }
+
     const fromTrack = list[currentTrackIdx];
     await saveLogToSupabase(fromTrack, "PREV_FROM", "MovedToPrev");
 
-    // 2. 戻る先（1つ前の曲）の評価を 0 にリセットし、PREV_TO として記録
     const updatedList = [...list];
     updatedList[prevIdx] = { ...updatedList[prevIdx], evaluation: 0 };
     tracksRef.current = updatedList;
     setTracks(updatedList);
 
     await saveLogToSupabase(updatedList[prevIdx], "PREV_TO", "EvaluationResetTo0");
-    setStatusMessage("前の曲に戻ります（評価を 0 にリセットしました）");
+    setStatusMessage("前の曲に戻りました（評価を 0 にリセットしました）");
 
-    await loadAndPlayTrackAtIndex(prevIdx);
+    await loadAndPlayTrackAtIndex(prevIdx, false);
   };
 
   // ====================================================================
@@ -504,13 +809,18 @@ export default function SdvExperimentApp() {
   useEffect(() => {
     if (phase !== "running") return;
     const prev = prevEnvRef.current;
-    if (prev.weather !== weather || prev.location !== location || prev.timeOfDay !== timeOfDay) {
+    if (
+      prev.weather !== weather ||
+      prev.location !== location ||
+      prev.timeOfDay !== timeOfDay ||
+      prev.season !== season
+    ) {
       setEnvChangeBanner(
-        `環境変化を検知（天気:${weather} / 場所:${location} / 時間:${timeOfDay}）。次曲から反映できます。`
+        `環境変化を検知（天気:${weather} / 場所:${location} / 時間:${timeOfDay} / 季節:${season}）。選曲基準を更新しました。`
       );
-      prevEnvRef.current = { weather, location, timeOfDay };
+      prevEnvRef.current = { weather, location, timeOfDay, season };
     }
-  }, [weather, location, timeOfDay, phase]);
+  }, [weather, location, timeOfDay, season, phase]);
 
   // ====================================================================
   // 拡張A：緊急割り込み（即座停止＋警告音＋音声案内）
@@ -561,7 +871,8 @@ export default function SdvExperimentApp() {
     setEmergencyActive(false);
     setEmergencyReason("");
     setEnvChangeBanner(null);
-    loadAndPlayTrackAtIndex(resolveNextIndex(currentTrackIdx));
+    const nextIdx = resolveNextIndex(tracksRef.current[currentTrackIdx]?.trackId);
+    loadAndPlayTrackAtIndex(nextIdx, true);
   };
 
   // ====================================================================
@@ -577,17 +888,28 @@ export default function SdvExperimentApp() {
     ).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
     setSessionId(sid);
     setSavedCount(0);
+    setHistoryIndices([]);
+    setPlayedIds([]);
+    setLearnedShiftV(0);
+    setLearnedShiftE(0);
     setEnvChangeBanner(null);
 
-    // 評価状態をすべて0に初期化してID順の先頭(0)から開始
     const resetTracks = tracksRef.current.map((t) => ({ ...t, evaluation: 0 }));
     tracksRef.current = resetTracks;
     setTracks(resetTracks);
 
     setPhase("running");
-    prevEnvRef.current = { weather, location, timeOfDay };
-    setTimeout(() => loadAndPlayTrackAtIndex(0), 50);
+    prevEnvRef.current = { weather, location, timeOfDay, season };
   };
+
+  // running開始直後に最新の engineResult で最初の1曲を選出
+  useEffect(() => {
+    if (phase === "running" && playedIds.length === 0 && tracks.length > 0) {
+      const firstIdx = playMode === "order" ? 0 : resolveNextIndex();
+      loadAndPlayTrackAtIndex(firstIdx, false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, tracks.length]);
 
   const finishExperiment = () => {
     setEmergencyActive(false);
@@ -600,6 +922,7 @@ export default function SdvExperimentApp() {
     setIsHardBraking(false);
     setEmergencyActive(false);
     setSpeedKph(50);
+    setDrivingMinutes(15);
     setPhase("setup");
   };
 
@@ -654,7 +977,7 @@ export default function SdvExperimentApp() {
       </header>
 
       {/* ====================================================================
-          PHASE 1: 被験者セットアップ画面（C# 2タップUI完全準拠）
+          PHASE 1: 被験者セットアップ画面（2タップUI）
          ==================================================================== */}
       {phase === "setup" && (
         <div className="max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 space-y-6">
@@ -780,7 +1103,7 @@ export default function SdvExperimentApp() {
                   onClick={resolveEmergencyAndResume}
                   className="w-full bg-white text-rose-950 font-extrabold py-3 rounded-xl hover:bg-rose-100 transition"
                 >
-                  危険状態を解除し、楽曲再生を再開する
+                  危険状態を解除し、安全適応楽曲の再生を再開する
                 </button>
               </div>
             )}
@@ -793,12 +1116,12 @@ export default function SdvExperimentApp() {
                   onClick={handleNextTrackClick}
                   className="shrink-0 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg"
                 >
-                  次の曲へ切替
+                  新環境の曲へ切替
                 </button>
               </div>
             )}
 
-            {/* ステータスバー（C# TxtStatus 相当） */}
+            {/* ステータスバー */}
             <div className="bg-slate-900 border border-cyan-900/60 text-cyan-200 text-xs font-mono px-4 py-2.5 rounded-xl flex justify-between items-center gap-2">
               <span>{statusMessage}</span>
               <span className="text-slate-400 shrink-0">
@@ -811,16 +1134,21 @@ export default function SdvExperimentApp() {
               </span>
             </div>
 
-            {/* 楽曲再生カード（Spotify自動検索 Embed プレイヤー） */}
+            {/* 楽曲再生カード（Spotify Embed プレイヤー） */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
               <div className="flex flex-wrap justify-between items-center gap-2 text-xs text-slate-400">
                 <span>
                   被験者: <b className="text-white">{participantId}</b> |{" "}
                   {WHO_LABELS[selectedWho]} × {MOOD_LABELS[selectedMood]}
                 </span>
-                <span className="bg-cyan-950 text-cyan-300 px-2.5 py-1 rounded border border-cyan-800 font-mono">
-                  {currentTrackIdx + 1} / {tracks.length}曲 ({playMode === "order" ? "ID順" : "状況適応"})
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="bg-cyan-950 text-cyan-300 px-2.5 py-1 rounded border border-cyan-800 font-mono">
+                    ISO: {engineResult.isoStrategy}
+                  </span>
+                  <span className="bg-slate-950 text-slate-300 px-2 py-1 rounded border border-slate-800 font-mono">
+                    音量指示: {engineResult.volumeNote}
+                  </span>
+                </div>
               </div>
 
               {currentTrack && !emergencyActive ? (
@@ -832,11 +1160,10 @@ export default function SdvExperimentApp() {
                     </h2>
                     <p className="text-slate-400">{currentTrack.artistName}</p>
                     <p className="text-xs font-mono text-cyan-400 mt-1">
-                      ID:{currentTrack.trackId} | V:{currentTrack.valence} | E:{currentTrack.energy} | BPM:{currentTrack.bpm} | Inst:{currentTrack.instrumentalness}
+                      ID:{currentTrack.trackId} | V:{currentTrack.valence} | E:{currentTrack.energy} | BPM:{currentTrack.bpm} | Inst:{currentTrack.instrumentalness} | Ac:{currentTrack.acousticness}
                     </p>
                   </div>
 
-                  {/* 自動検索した Spotify Track ID で埋め込みプレイヤーを描画 */}
                   {isChangingTrack ? (
                     <div className="h-[152px] flex items-center justify-center bg-slate-950 rounded-xl border border-slate-800 text-sm text-cyan-400">
                       Spotifyから楽曲を検索中...
@@ -875,12 +1202,10 @@ export default function SdvExperimentApp() {
                 </div>
               )}
 
-              {/* 評価セクション（C#パターンA：押しても曲は進めない） */}
+              {/* 評価セクション（パターンA：押しても曲は進めない） */}
               <div className="border-t border-slate-800 pt-5 space-y-4">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="font-bold text-slate-200">
-                    この曲の評価（押しても曲は止まらず継続再生されます）
-                  </span>
+                <div className="text-sm font-bold text-slate-200">
+                  この曲の評価（押しても曲は止まらず継続再生されます）
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -908,7 +1233,6 @@ export default function SdvExperimentApp() {
                   </button>
                 </div>
 
-                {/* 任意メモ ＆ 前の曲・次の曲ボタン（C# BtnPrevTrack / BtnNextTrack 移植） */}
                 <input
                   type="text"
                   value={evalComment}
@@ -930,14 +1254,14 @@ export default function SdvExperimentApp() {
                     disabled={emergencyActive || isChangingTrack}
                     className="flex items-center justify-center gap-1.5 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-white text-sm font-bold py-3 rounded-xl border border-slate-600"
                   >
-                    次の曲へ（スキップ） <SkipForward className="w-4 h-4" />
+                    次の曲へ（現在の条件で再選曲） <SkipForward className="w-4 h-4" />
                   </button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 右側：実験実施者用 コンディション＆イベント操作パネル */}
+          {/* 右側：実験実施者用 コンディション操作 ＆ 中間処理可視化 */}
           {showControlPanel && (
             <div className="lg:col-span-5 space-y-5">
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
@@ -953,18 +1277,8 @@ export default function SdvExperimentApp() {
                   </button>
                 </div>
 
-                {/* 再生モード切替（C#準拠ID順 vs 状況適応） */}
+                {/* 再生モード切替 */}
                 <div className="grid grid-cols-2 gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs">
-                  <button
-                    onClick={() => setPlayMode("order")}
-                    className={`py-2 rounded-lg font-bold transition ${
-                      playMode === "order"
-                        ? "bg-cyan-600 text-white"
-                        : "text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    CSV Track_ID順（C#準拠）
-                  </button>
                   <button
                     onClick={() => setPlayMode("adaptive")}
                     className={`py-2 rounded-lg font-bold transition ${
@@ -973,11 +1287,21 @@ export default function SdvExperimentApp() {
                         : "text-slate-400 hover:text-white"
                     }`}
                   >
-                    状況適応選曲（V/E一致）
+                    一覧表フル版（状況適応）
+                  </button>
+                  <button
+                    onClick={() => setPlayMode("order")}
+                    className={`py-2 rounded-lg font-bold transition ${
+                      playMode === "order"
+                        ? "bg-cyan-600 text-white"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    CSV Track_ID順（比較用）
                   </button>
                 </div>
 
-                {/* 車速・RPM・連続走行時間 */}
+                {/* 車速・RPM・連続走行時間・気温 */}
                 <div className="space-y-3 bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs">
                   <div>
                     <div className="flex justify-between mb-1">
@@ -995,10 +1319,41 @@ export default function SdvExperimentApp() {
                       className="w-full accent-cyan-400"
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span>連続走行時間</span>
+                        <span className="font-mono text-amber-400 font-bold">{drivingMinutes}分</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={5}
+                        max={120}
+                        step={5}
+                        value={drivingMinutes}
+                        onChange={(e) => setDrivingMinutes(Number(e.target.value))}
+                        className="w-full accent-amber-400"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span>気温 (平均{SEASON_AVG_TEMP[season]}℃)</span>
+                        <span className="font-mono text-emerald-400 font-bold">{tempC}℃</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={-5}
+                        max={40}
+                        value={tempC}
+                        onChange={(e) => setTempC(Number(e.target.value))}
+                        className="w-full accent-emerald-400"
+                      />
+                    </div>
+                  </div>
                   <div>
                     <div className="flex justify-between mb-1">
                       <span>エンジン回転数 (CAN 0x30)</span>
-                      <span className="font-mono text-slate-200 font-bold">{engineRpm} RPM</span>
+                      <span className="font-mono text-slate-300">{engineRpm} RPM</span>
                     </div>
                     <input
                       type="range"
@@ -1007,32 +1362,18 @@ export default function SdvExperimentApp() {
                       step={100}
                       value={engineRpm}
                       onChange={(e) => setEngineRpm(Number(e.target.value))}
-                      className="w-full accent-slate-300"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span>連続走行時間</span>
-                      <span className="font-mono text-amber-400 font-bold">{drivingMinutes} 分</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={5}
-                      max={120}
-                      step={5}
-                      value={drivingMinutes}
-                      onChange={(e) => setDrivingMinutes(Number(e.target.value))}
-                      className="w-full accent-amber-400"
+                      className="w-full accent-slate-400"
                     />
                   </div>
                 </div>
 
-                {/* 外部環境（GPS自動取得値＋手動変更可能） */}
+                {/* 実測値表示 */}
                 <div className="text-[11px] text-slate-400 flex items-center gap-1.5 bg-slate-950 px-3 py-2 rounded-lg border border-slate-800">
                   <MapPin className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                   <span>実測: {displayWeatherStr} / 座標: {displayLocationStr}</span>
                 </div>
 
+                {/* 外部環境セレクト */}
                 <div className="grid grid-cols-2 gap-2.5 text-xs">
                   <div>
                     <label className="text-slate-400 flex items-center gap-1 mb-1">
@@ -1042,14 +1383,14 @@ export default function SdvExperimentApp() {
                       value={weather}
                       onChange={(e) => {
                         setWeather(e.target.value);
-                        setDisplayWeatherStr(e.target.value);
+                        setSunshineScore(e.target.value === "Sunny" ? 0.9 : e.target.value === "Cloudy" ? 0.5 : 0.1);
                       }}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2"
                     >
                       <option value="Sunny">☀️ 晴れ</option>
                       <option value="Cloudy">☁️ 曇り</option>
                       <option value="Rain">🌧️ 雨</option>
-                      <option value="HeavyRain">⛈️ 豪雨/雷雨</option>
+                      <option value="HeavyRain">⛈️ 豪雨/雷雨 (ワイパーHIGH)</option>
                       <option value="Snow">❄️ 雪</option>
                     </select>
                   </div>
@@ -1062,12 +1403,12 @@ export default function SdvExperimentApp() {
                       onChange={(e) => setLocation(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2"
                     >
-                      <option value="Normal">🏙️ 市街地</option>
+                      <option value="Normal">🏙️ 市街地・標準</option>
                       <option value="Coast">🏖️ 海辺</option>
                       <option value="Mountain">⛰️ 山道</option>
                       <option value="Field">🌾 野原</option>
-                      <option value="Narrow">⚠️ 細道</option>
-                      <option value="Viewpoint">🌉 見晴らし良</option>
+                      <option value="Narrow">⚠️ 細道 (認知負荷軽減)</option>
+                      <option value="Viewpoint">🌉 見晴らしの良い道</option>
                     </select>
                   </div>
                   <div>
@@ -1079,11 +1420,11 @@ export default function SdvExperimentApp() {
                       onChange={(e) => setTimeOfDay(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2"
                     >
-                      <option value="Morning">🌅 朝</option>
-                      <option value="Day">☀️ 昼</option>
-                      <option value="Evening">🌇 夕方</option>
-                      <option value="Night">🌃 夜</option>
-                      <option value="LateNight">🌌 深夜</option>
+                      <option value="Morning">🌅 朝 (5〜10時)</option>
+                      <option value="Day">☀️ 昼 (10〜16時)</option>
+                      <option value="Evening">🌇 夕方 (16〜18時)</option>
+                      <option value="Night">🌃 夜 (18〜22時)</option>
+                      <option value="LateNight">🌌 深夜 (22〜5時)</option>
                     </select>
                   </div>
                   <div>
@@ -1093,10 +1434,10 @@ export default function SdvExperimentApp() {
                       onChange={(e) => setSeason(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2"
                     >
-                      <option value="Spring">春</option>
-                      <option value="Summer">夏</option>
-                      <option value="Autumn">秋</option>
-                      <option value="Winter">冬</option>
+                      <option value="Spring">春 (3〜5月)</option>
+                      <option value="Summer">夏 (6〜8月)</option>
+                      <option value="Autumn">秋 (9〜11月)</option>
+                      <option value="Winter">冬 (12〜2月)</option>
                     </select>
                   </div>
                 </div>
@@ -1104,7 +1445,7 @@ export default function SdvExperimentApp() {
                 {/* 拡張A：緊急割り込み発火ボタン群 */}
                 <div className="border-t border-slate-800 pt-3 space-y-2">
                   <div className="text-xs font-bold text-rose-400 flex items-center gap-1">
-                    <AlertTriangle className="w-3.5 h-3.5" /> 拡張A：緊急割り込みトリガー（音楽即停止＋警告音）
+                    <AlertTriangle className="w-3.5 h-3.5" /> 拡張A：緊急割り込み（音楽即停止＋警告音）
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-xs">
                     <button
@@ -1140,19 +1481,93 @@ export default function SdvExperimentApp() {
                 </div>
               </div>
 
-              {/* 中間処理トレース */}
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-                <div className="text-xs font-bold text-cyan-400 flex items-center gap-1">
-                  <Zap className="w-3.5 h-3.5" /> パラメータ算出トレース
+              {/* ラッセル円環ミニプロット ＋ 計算トレース */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-cyan-400 flex items-center gap-1">
+                    <Zap className="w-3.5 h-3.5" /> ラッセル円環 ＆ パラメータ算出トレース
+                  </span>
+                  <span className="text-slate-400">完全一致: {matchedTracks.length}曲</span>
                 </div>
-                <div className="bg-slate-950 p-3 rounded-xl font-mono text-[11px] text-slate-300 space-y-1 max-h-40 overflow-y-auto">
-                  {targetParams.logs.map((l, i) => (
+
+                {/* 2Dマッピング可視化 */}
+                <div className="grid grid-cols-12 gap-3 items-center">
+                  <div className="col-span-5 relative aspect-square bg-slate-950 rounded-xl border border-slate-800 overflow-hidden">
+                    <svg viewBox="0 0 100 100" className="w-full h-full">
+                      <line x1="50" y1="0" x2="50" y2="100" stroke="#334155" strokeWidth="0.5" strokeDasharray="2,2" />
+                      <line x1="0" y1="50" x2="100" y2="50" stroke="#334155" strokeWidth="0.5" strokeDasharray="2,2" />
+                      {/* 2タップ初期枠 */}
+                      <rect
+                        x={engineResult.twoTapBox.minV * 100}
+                        y={(1 - engineResult.twoTapBox.maxE) * 100}
+                        width={(engineResult.twoTapBox.maxV - engineResult.twoTapBox.minV) * 100}
+                        height={(engineResult.twoTapBox.maxE - engineResult.twoTapBox.minE) * 100}
+                        fill="none"
+                        stroke="#64748b"
+                        strokeWidth="1"
+                        strokeDasharray="2,2"
+                      />
+                      {/* 最終ウィンドウ */}
+                      <rect
+                        x={engineResult.finalBox.minV * 100}
+                        y={(1 - engineResult.finalBox.maxE) * 100}
+                        width={Math.max(2, (engineResult.finalBox.maxV - engineResult.finalBox.minV) * 100)}
+                        height={Math.max(2, (engineResult.finalBox.maxE - engineResult.finalBox.minE) * 100)}
+                        fill={isDrowsy ? "rgba(244,63,94,0.2)" : "rgba(6,182,212,0.2)"}
+                        stroke={isDrowsy ? "#f43f5e" : "#22d3ee"}
+                        strokeWidth="1.5"
+                      />
+                      {tracks.map((t) => {
+                        const isCur = currentTrack?.trackId === t.trackId;
+                        const isHit = matchedTracks.some((m) => m.trackId === t.trackId);
+                        return (
+                          <circle
+                            key={t.trackId}
+                            cx={t.valence * 100}
+                            cy={(1 - t.energy) * 100}
+                            r={isCur ? 3.2 : isHit ? 1.5 : 0.8}
+                            fill={isCur ? "#facc15" : isHit ? "#22d3ee" : "#475569"}
+                            opacity={isCur ? 1 : isHit ? 0.9 : 0.35}
+                          />
+                        );
+                      })}
+                    </svg>
+                  </div>
+
+                  {/* 最終5次元出力値 */}
+                  <div className="col-span-7 space-y-1.5 font-mono text-[11px]">
+                    <div className="bg-slate-950 px-2.5 py-1.5 rounded border border-slate-800 flex justify-between">
+                      <span className="text-slate-400">Valence</span>
+                      <span className="text-cyan-300">
+                        {engineResult.finalBox.minV.toFixed(2)} ~ {engineResult.finalBox.maxV.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="bg-slate-950 px-2.5 py-1.5 rounded border border-slate-800 flex justify-between">
+                      <span className="text-slate-400">Energy</span>
+                      <span className="text-cyan-300">
+                        {engineResult.finalBox.minE.toFixed(2)} ~ {engineResult.finalBox.maxE.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="bg-slate-950 px-2.5 py-1.5 rounded border border-slate-800 flex justify-between">
+                      <span className="text-slate-400">BPM</span>
+                      <span className="text-amber-300">
+                        {engineResult.minBpm} ~ {engineResult.maxBpm}
+                      </span>
+                    </div>
+                    <div className="bg-slate-950 px-2.5 py-1.5 rounded border border-slate-800 flex justify-between">
+                      <span className="text-slate-400">Inst / Ac</span>
+                      <span className="text-emerald-300">
+                        I:[{engineResult.minInst.toFixed(1)},{engineResult.maxInst.toFixed(1)}] A:[{engineResult.minAc.toFixed(1)},{engineResult.maxAc.toFixed(1)}]
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 計算ログ */}
+                <div className="bg-slate-950 p-3 rounded-xl font-mono text-[11px] text-slate-300 space-y-1 max-h-36 overflow-y-auto">
+                  {engineResult.logs.map((l, i) => (
                     <div key={i}>{l}</div>
                   ))}
-                </div>
-                <div className="text-[11px] font-mono text-cyan-300 flex justify-between pt-1">
-                  <span>Valence: {targetParams.minV.toFixed(2)} ~ {targetParams.maxV.toFixed(2)}</span>
-                  <span>Energy: {targetParams.minE.toFixed(2)} ~ {targetParams.maxE.toFixed(2)}</span>
                 </div>
               </div>
             </div>
