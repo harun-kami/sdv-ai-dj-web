@@ -75,7 +75,6 @@ const MOOD_CONFIG: Record<
     e?: number;
     bpm?: number;
     instRule?: (inst: number) => boolean;
-    instLabel?: string;
     vibe?: string;
   }
 > = {
@@ -85,7 +84,6 @@ const MOOD_CONFIG: Record<
     e: 0.25,
     bpm: 75,
     instRule: (i) => i > 0.5,
-    instLabel: "Inst > 0.50",
     vibe: "Chill",
   },
   refresh: {
@@ -94,7 +92,6 @@ const MOOD_CONFIG: Record<
     e: 0.7,
     bpm: 115,
     instRule: (i) => i < 0.5,
-    instLabel: "Inst < 0.50",
     vibe: "Refresh",
   },
   party: {
@@ -103,7 +100,6 @@ const MOOD_CONFIG: Record<
     e: 0.85,
     bpm: 140,
     instRule: (i) => i < 0.3,
-    instLabel: "Inst < 0.30",
     vibe: "Party",
   },
   focus: {
@@ -112,7 +108,6 @@ const MOOD_CONFIG: Record<
     e: 0.75,
     bpm: 125,
     instRule: (i) => i > 0.6,
-    instLabel: "Inst > 0.60",
     vibe: "Focus",
   },
   emotional: {
@@ -121,7 +116,6 @@ const MOOD_CONFIG: Record<
     e: 0.4,
     bpm: 85,
     instRule: (i) => i < 0.5,
-    instLabel: "Inst < 0.50",
     vibe: "Emotional",
   },
   auto: {
@@ -142,7 +136,6 @@ const TIME_CONFIG: Record<
 const clamp = (val: number, min: number, max: number) =>
   Math.min(max, Math.max(min, val));
 
-// CSV行パース（ダブルクォート対応）
 function parseCSVLine(line: string): string[] {
   const result: string[] = [];
   let cur = "";
@@ -162,7 +155,6 @@ function parseCSVLine(line: string): string[] {
   return result;
 }
 
-// Spotify ID抽出
 function extractSpotifyId(row: string[]): string | null {
   for (let i = row.length - 1; i >= 0; i--) {
     const cell = row[i] || "";
@@ -195,8 +187,15 @@ export default function Home() {
   // ISO原理ステップ (1〜3曲目)
   const [isoStep, setIsoStep] = useState<number>(1);
 
-  // 選択中トラック（手動切替用）
+  // 選択中トラック
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
+
+  // フィードバック送信状態
+  const [saving, setSaving] = useState(false);
+  const [feedbackStatus, setFeedbackStatus] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   // CSV読み込み
   useEffect(() => {
@@ -233,12 +232,10 @@ export default function Home() {
 
   // --- 選曲ロジック計算 ---
   const calculation = useMemo(() => {
-    // 1. 出発点（Step 2 時間帯ベース + Step 3 環境シフト）
     let startV = TIME_CONFIG[time].v;
     let startE = TIME_CONFIG[time].e;
     let startBpmRange: [number, number] = [...TIME_CONFIG[time].bpm];
 
-    // 天気シフト
     if (weather === "clear") {
       startV += 0.1;
       startE += 0.1;
@@ -252,7 +249,6 @@ export default function Home() {
       startBpmRange = [60, 90];
     }
 
-    // 季節シフト
     if (season === "summer") {
       startV += 0.1;
       startE += 0.1;
@@ -261,7 +257,6 @@ export default function Home() {
       startE -= 0.1;
     }
 
-    // ロケーションシフト
     let contextVibe: string | undefined;
     if (location === "sea") {
       startV += 0.15;
@@ -283,7 +278,6 @@ export default function Home() {
       startBpmRange = [110, 135];
     }
 
-    // 走行状況シフト
     if (drive === "jam") {
       startV -= 0.2;
       startE += 0.2;
@@ -294,11 +288,9 @@ export default function Home() {
       startBpmRange = [100, 120];
     }
 
-    // Clamp (0.00 ~ 1.00)
     startV = clamp(startV, 0, 1);
     startE = clamp(startE, 0, 1);
 
-    // 2. 到達点（Mood）＆ クリッピング（Whoの壁）
     const whoRule = WHO_CONFIG[who];
     const moodRule = MOOD_CONFIG[mood];
 
@@ -309,7 +301,6 @@ export default function Home() {
     let targetVibe = moodRule.vibe ?? contextVibe;
     let instRule = moodRule.instRule;
 
-    // クリッピング処理（通常時のみ）
     let isClipped = false;
     const rawGoalV = goalV;
     const rawGoalE = goalE;
@@ -317,7 +308,6 @@ export default function Home() {
     goalE = clamp(goalE, whoRule.eRange[0], whoRule.eRange[1]);
     if (goalV !== rawGoalV || goalE !== rawGoalE) isClipped = true;
 
-    // 3. ISO原理（線形補間：1〜3曲目）
     const ratio = isoStep / 3;
     let targetV = startV + (goalV - startV) * ratio;
     let targetE = startE + (goalE - startE) * ratio;
@@ -326,7 +316,6 @@ export default function Home() {
     let targetBpmMax =
       startBpmRange[1] + (goalBpmMax - startBpmRange[1]) * ratio;
 
-    // 4. 最優先：緊急割り込み（Whoの壁も無視して上書き）
     let emergencyMessage = "";
     if (emergency === "drowsy") {
       targetV = startV;
@@ -357,7 +346,6 @@ export default function Home() {
         "【休憩提案音声】長時間走行の疲労を検知。疲労軽減に最適な中テンポ・リフレッシュ曲へ介入します。";
     }
 
-    // 5. Whoフィルター（緊急時は無効化）
     const filtered =
       emergency !== "none"
         ? tracks
@@ -375,10 +363,8 @@ export default function Home() {
             return inV && inE && inBpm && inInst;
           });
 
-    // 候補0曲対策（フォールバック）
     const pool = filtered.length > 0 ? filtered : tracks;
 
-    // 6. 10点満点スコアリング
     const scored = pool
       .map((t) => {
         const sv = (1.0 - Math.abs(targetV - t.valence)) * 3.0;
@@ -436,6 +422,103 @@ export default function Home() {
     calculation.ranked.find((r) => r.track.id === selectedTrackId) ||
     calculation.ranked[0];
 
+  // 条件や曲が変わったらフィードバック表示をリセット
+  useEffect(() => {
+    setFeedbackStatus(null);
+  }, [
+    who,
+    mood,
+    time,
+    weather,
+    season,
+    location,
+    drive,
+    emergency,
+    isoStep,
+    activeItem?.track.id,
+  ]);
+
+  // --- Supabaseへ評価ログを保存 ---
+  const handleFeedback = async (feedbackValue: 1 | 0) => {
+    if (!activeItem || saving) return;
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      setFeedbackStatus({
+        type: "error",
+        message:
+          "環境変数（NEXT_PUBLIC_SUPABASE_URL / ANON_KEY）が設定されていません。",
+      });
+      return;
+    }
+
+    setSaving(true);
+    setFeedbackStatus(null);
+
+    const payload = {
+      feedback: feedbackValue, // 1: 違和感なし, 0: 違和感あり
+      who,
+      mood,
+      time_of_day: time,
+      weather,
+      season,
+      location,
+      drive_mode: drive,
+      emergency,
+      iso_step: isoStep,
+      target_valence: Number(calculation.targetV.toFixed(3)),
+      target_energy: Number(calculation.targetE.toFixed(3)),
+      target_bpm_min: Math.round(calculation.targetBpmMin),
+      target_bpm_max: Math.round(calculation.targetBpmMax),
+      target_vibe: calculation.targetVibe ?? null,
+      track_title: activeItem.track.title,
+      track_artist: activeItem.track.artist,
+      track_valence: activeItem.track.valence,
+      track_energy: activeItem.track.energy,
+      track_bpm: activeItem.track.bpm,
+      track_vibe: activeItem.track.vibe,
+      total_score: Number(activeItem.total.toFixed(2)),
+      spotify_id: activeItem.track.spotifyId,
+    };
+
+    try {
+      const res = await fetch(`${supabaseUrl}/rest/v1/experiment_logs`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `HTTP ${res.status}`);
+      }
+
+      setFeedbackStatus({
+        type: "success",
+        message:
+          feedbackValue === 1
+            ? "「違和感なし」をDBに保存しました！"
+            : "「違和感あり」をDBに保存しました！",
+      });
+    } catch (err) {
+      setFeedbackStatus({
+        type: "error",
+        message: `保存エラー: ${
+          err instanceof Error ? err.message : "不明なエラー"
+        }`,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const uriCount = useMemo(
     () => tracks.filter((t) => t.spotifyId).length,
     [tracks]
@@ -456,7 +539,6 @@ export default function Home() {
                 : `DB読込: 全${tracks.length}曲 (URI登録済: ${uriCount}曲) / Who通過: ${calculation.filteredCount}曲`}
             </p>
           </div>
-          {/* 緊急割り込みボタン */}
           <div className="flex flex-wrap gap-2">
             {(
               [
@@ -486,7 +568,6 @@ export default function Home() {
           </div>
         </header>
 
-        {/* 緊急アラート表示 */}
         {calculation.emergencyMessage && (
           <div className="bg-rose-950/80 border border-rose-500 text-rose-100 px-4 py-3 rounded-xl text-sm font-medium">
             {calculation.emergencyMessage}
@@ -496,7 +577,6 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* 左カラム：操作パネル */}
           <section className="lg:col-span-5 space-y-5">
-            {/* Step 1: 2タップUI */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
               <h2 className="text-sm font-bold text-sky-400 uppercase tracking-wider">
                 Step 1. 2タップUI（Who & Mood）
@@ -556,7 +636,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Step 2 & 3: 環境コンテキスト */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
               <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">
                 Step 2 & 3. 環境コンテキスト（出発点）
@@ -637,7 +716,7 @@ export default function Home() {
 
           {/* 右カラム：計算結果 & プレイヤー */}
           <section className="lg:col-span-7 space-y-5">
-            {/* ISO原理ステップ＆ターゲット可視化 */}
+            {/* ISO原理ステップ */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-amber-400 uppercase tracking-wider">
@@ -665,9 +744,7 @@ export default function Home() {
 
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                  <div className="text-[11px] text-slate-400">
-                    出発点 (環境)
-                  </div>
+                  <div className="text-[11px] text-slate-400">出発点 (環境)</div>
                   <div className="text-sm font-mono mt-1">
                     V:{calculation.startV.toFixed(2)} / E:
                     {calculation.startE.toFixed(2)}
@@ -702,8 +779,8 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Spotify プレイヤー */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+            {/* Spotify プレイヤー & 違和感フィードバック */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
               {activeItem ? (
                 <>
                   <div className="flex items-center justify-between">
@@ -745,6 +822,40 @@ export default function Home() {
                       ※この曲はCSVにSpotify URIが登録されていません。
                     </div>
                   )}
+
+                  {/* 違和感あり / なし 評価ボタン */}
+                  <div className="pt-2 border-t border-slate-800 space-y-2">
+                    <div className="text-xs text-slate-400">
+                      この選曲の評価をDB（experiment_logs）に記録：
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        disabled={saving}
+                        onClick={() => handleFeedback(1)}
+                        className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-sm transition flex items-center justify-center gap-2"
+                      >
+                        <span>👍 違和感なし</span>
+                      </button>
+                      <button
+                        disabled={saving}
+                        onClick={() => handleFeedback(0)}
+                        className="py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-bold text-sm transition flex items-center justify-center gap-2"
+                      >
+                        <span>👎 違和感あり</span>
+                      </button>
+                    </div>
+                    {feedbackStatus && (
+                      <div
+                        className={`text-xs px-3 py-2 rounded-lg ${
+                          feedbackStatus.type === "success"
+                            ? "bg-emerald-950/70 text-emerald-300 border border-emerald-700/50"
+                            : "bg-rose-950/70 text-rose-300 border border-rose-700/50"
+                        }`}
+                      >
+                        {feedbackStatus.message}
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : (
                 <div className="text-sm text-slate-400">
